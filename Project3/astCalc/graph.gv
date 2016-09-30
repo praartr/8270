@@ -1,0 +1,11 @@
+digraph G {
+   sym_minus [label=" - "]  
+   sym_minus->sym_plus
+   sym_plus  [label=" + "]  
+   sym_plus->2
+      sym_plus->sym_mult
+   sym_mult  [label=" * "]  
+   sym_mult->3
+      sym_mult->5
+      sym_minus->7
+}
