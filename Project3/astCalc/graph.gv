@@ -2,10 +2,21 @@ digraph G {
    sym_minus [label=" - "]  
    sym_minus->sym_plus
    sym_plus  [label=" + "]  
-   sym_plus->2
+   sym_plus->sym_uminus
+   sym_uminus[label=" - "] 
+   sym_uminus->17
       sym_plus->sym_mult
    sym_mult  [label=" * "]  
-   sym_mult->3
-      sym_mult->5
-      sym_minus->7
+   sym_mult->2
+      sym_mult->sym_plus
+   sym_plus  [label=" + "]  
+   sym_plus->3
+      sym_plus->4
+      sym_minus->sym_div
+   sym_div   [label=" / "]  
+   sym_div->sym_exp
+   sym_exp   [label=" ** "] 
+   sym_exp->2
+      sym_exp->3
+      sym_div->4
 }

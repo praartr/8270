@@ -50,6 +50,7 @@ void makeGraph(const Ast* a, std::fstream& output) {
 	int mult_flag = 0;
 	int div_flag = 0;
 	int exp_flag = 0;
+	int uminus_flag = 0;
     if ( a ) {
 		if ( a->getLeft() ) {
 		    output << "   " ;
@@ -59,6 +60,7 @@ void makeGraph(const Ast* a, std::fstream& output) {
 				  case '*': if(mult_flag == 0)  { output <<"sym_mult  [label=\" * \"]  \n" ; mult_flag = 1; } output <<"   "<<"sym_mult"  << "->" ; break;
 				  case '/': if(div_flag == 0)   { output <<"sym_div   [label=\" / \"]  \n" ; div_flag = 1;  } output <<"   "<<"sym_div"   << "->" ; break;
 				  case '^': if(exp_flag == 0)   { output <<"sym_exp   [label=\" ** \"] \n" ; exp_flag = 1;  } output <<"   "<<"sym_exp"   << "->" ; break;
+				  case 'M': if(uminus_flag == 0)   { output <<"sym_uminus[label=\" - \"] \n" ; uminus_flag = 1;} output <<"   "<<"sym_uminus" << "->"; break;
 			 }
 			
 			if(a->getLeft()->getNodetype() == 'K') { 			
@@ -84,6 +86,10 @@ void makeGraph(const Ast* a, std::fstream& output) {
 			    output << "sym_exp" << std::endl;  
 				makeGraph( a->getLeft(), output ); 
 			}
+			else if(a->getLeft()->getNodetype() == 'M') { 
+			    output << "sym_uminus" << std::endl;  
+				makeGraph( a->getLeft(), output ); 
+			}
 			
 			 
 		}
@@ -95,6 +101,7 @@ void makeGraph(const Ast* a, std::fstream& output) {
 				  case '*': if( mult_flag  == 0 ) { output << "sym_mult  [label=\" * \"] \n"  ; mult_flag = 1; } output <<"   " << "sym_mult"  << "->" ; break;
 				  case '/': if( div_flag   == 0 ) { output << "sym_div   [label=\" / \"] \n"  ; div_flag = 1;  } output <<"   " << "sym_div"   << "->" ; break;
 				  case '^': if( exp_flag   == 0 ) { output << "sym_exp   [label=\" ** \"] \n" ; exp_flag = 1;  } output <<"   " << "sym_exp"   << "->" ; break;
+				  case 'M': if(uminus_flag == 0)   { output <<"sym_uminus[label=\" - \"] \n" ; uminus_flag = 1;} output <<"   "<<"sym_uminus" << "->"; break;
 			 }
 			
 		    if(a->getRight()->getNodetype() == 'K') { 			
@@ -119,6 +126,10 @@ void makeGraph(const Ast* a, std::fstream& output) {
 			else if(a->getRight()->getNodetype() == '^') { 
 			    output << "sym_exp" << std::endl;  
 				makeGraph( a->getRight(), output ); 
+			}
+			else if(a->getLeft()->getNodetype() == 'M') { 
+			    output << "sym_uminus" << std::endl;  
+				makeGraph( a->getLeft(), output ); 
 			}
 		}
 	}

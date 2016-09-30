@@ -21,7 +21,6 @@
 %token EOL
 %left PLUS MINUS
 %left MULT DIV
-%left UMINUS 
 %right EXPO
 %left LPAR RPAR
 %type <ast> exp
@@ -50,7 +49,7 @@ exp    : exp PLUS exp   { $$ = new AstNode('+', $1,$3);    }
        | exp DIV exp    { $$ = new AstNode('/', $1,$3);    }
        | LPAR exp RPAR  { $$ = $2;                         }
        | exp EXPO exp   { $$ = new AstNode('^', $1,$3);    }
-       | MINUS exp %prec UMINUS { $$ = new AstNode('M', $2, NULL); }
+       | MINUS exp %prec MINUS { $$ = new AstNode('M', $2, NULL); }
        | NUMBER         { $$ = new AstNumber('K', $1);     }
        ;
 %%
