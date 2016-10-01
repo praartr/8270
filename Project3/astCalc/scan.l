@@ -23,7 +23,7 @@
 \n         { return EOL; }
 "//".*  
 [ \t]      { } // ignore white space
-.	         { yyerror("Mystery character ", yytext[0]); }
+.	   { yyerror("Mystery character ", yytext[0]); }
 %%
 int yywrap() {
   yylex_destroy();
