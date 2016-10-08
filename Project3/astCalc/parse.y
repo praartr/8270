@@ -29,27 +29,29 @@
 
 calclist 
        : calclist exp EOL {
-           std::cout << "= " << eval($2) << std::endl;
-		   std::fstream output;
-		   output.open("graph.gv", std::ios::out);
-		   output << "digraph G {" << std::endl;
-		   makeGraph($2,output);
-		   output << "}" << std::endl;
-           output.close();
-           treeFree($2);
-           std::cout << "> ";
+			std::cout << "= " << eval($2) << std::endl;
+			unsigned int order_label = 1;
+			std::fstream output;
+			output.open("graph.gv", std::ios::out);
+			output << "digraph G {" << std::endl;
+			output<< order_label << "[label=\""<<$2->getNodetype()<<"\"]" <<std::endl;
+			makeGraph($2, output, order_label);
+			output << "}" << std::endl;
+			output.close();
+	        treeFree($2);
+            std::cout << "> ";
          }
        | calclist EOL // blank line or a comment
        | // empty
        ;
 
-exp    : exp PLUS exp   { $$ = new AstNode('+', $1,$3);    }
-       | exp MINUS exp  { $$ = new AstNode('-', $1,$3);    }
-       | exp MULT exp   { $$ = new AstNode('*', $1,$3);    }
-       | exp DIV exp    { $$ = new AstNode('/', $1,$3);    }
-       | LPAR exp RPAR  { $$ = $2;                         }
-       | exp EXPO exp   { $$ = new AstNode('^', $1,$3);    }
-       | MINUS exp %prec MINUS { $$ = new AstNode('M', $2, NULL); }
-       | NUMBER         { $$ = new AstNumber('K', $1);     }
+exp    : exp PLUS exp          { $$ = new PlusExp($1,$3);    }
+       | exp MINUS exp         { $$ = new MinusExp($1,$3);    }
+       | exp MULT exp          { $$ = new MultExp($1,$3);    }
+       | exp DIV exp           { $$ = new DivExp($1,$3);    }
+       | LPAR exp RPAR         { $$ = $2;                         }
+       | exp EXPO exp          { $$ = new ExpoExp($1,$3);    }
+       | MINUS exp %prec MINUS { $$ = new UMinusExp($2); }
+       | NUMBER                { $$ = new AstNumber($1);     }
        ;
 %%
