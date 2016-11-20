@@ -2,17 +2,17 @@
 
 
 %{
-
 #include <iostream>
 #include <fstream>
 #include <cstring>
 #include <math.h>
-
+#include <iomanip>
 #include <cstdlib>
 #include <stdlib.h>
 #include <string>
 
 #include "symboltable.cpp"
+
 int yylex (void);
 extern int yylineno;
 extern char *yytext;
@@ -26,22 +26,24 @@ void yyerror (char const *);
 }
 
 // 83 tokens, in alphabetical order:
-%token AMPEREQUAL AMPERSAND AND AS ASSERT AT BACKQUOTE BAR BREAK
-%token CIRCUMFLEX CIRCUMFLEXEQUAL CLASS COLON COMMA CONTINUE DEDENT
-%token DEF DEL DOT DOUBLESLASH DOUBLESLASHEQUAL 
-%token DOUBLESTAR DOUBLESTAREQUAL ELIF ELSE ENDMARKER EQEQUAL
+%token AMPERSAND AND AS ASSERT AT BACKQUOTE BAR BREAK
+%token CIRCUMFLEX CLASS COLON COMMA CONTINUE DEDENT
+%token DEF DEL DOT DOUBLESLASH 
+%token DOUBLESTAR ELIF ELSE ENDMARKER EQEQUAL
 %token EQUAL EXCEPT EXEC FINALLY FOR FROM GLOBAL GREATER GREATEREQUAL GRLT
-%token IF IMPORT IN INDENT IS LAMBDA LBRACE LEFTSHIFT LEFTSHIFTEQUAL LESS
-%token LESSEQUAL LPAR LSQB MINEQUAL MINUS NAME NEWLINE NOT NOTEQUAL 
-%token OR PASS PERCENT PERCENTEQUAL PLUS PLUSEQUAL PRINT RAISE 
-%token RBRACE RETURN RIGHTSHIFT RIGHTSHIFTEQUAL RPAR RSQB 
-%token SEMI SLASH SLASHEQUAL STAR STAREQUAL
-%token STRING TILDE TRY VBAREQUAL WHILE WITH YIELD
-
-%token <c> FLOATNUMBER INTNUMBER NAME
-%type <ast> arith_expr term atom power factor shift_expr and_expr xor_expr expr opt_test
-            comparison test or_test and_test not_test yield_expr
-			lambdef opt_dictorsetmaker opt_listmaker testlist1 dictorsetmaker testlist star_EQUAL pick_yield_expr_testlist opt_yield_test
+%token IF IMPORT IN INDENT IS LAMBDA LBRACE LESSEQUAL LEFTSHIFT LESS
+%token LPAR LSQB MINUS NEWLINE NOT NOTEQUAL 
+%token OR PASS PERCENT PLUS PRINT RAISE 
+%token RBRACE RETURN RIGHTSHIFT RPAR RSQB 
+%token SEMI SLASH STAR 
+%token STRING TILDE TRY WHILE WITH YIELD PLUSEQUAL MINEQUAL PERCENTEQUAL SLASHEQUAL STAREQUAL AMPEREQUAL CIRCUMFLEXEQUAL DOUBLESTAREQUAL LEFTSHIFTEQUAL RIGHTSHIFTEQUAL VBAREQUAL DOUBLESLASHEQUAL
+ 
+%token <c> FLOATNUMBER INTNUMBER NAME 
+%type <ast> arith_expr term atom power factor shift_expr and_expr xor_expr 
+            expr opt_test opt_test_2 plus_COMMA_test comparison test or_test and_test not_test
+            opt_dictorsetmaker listmaker opt_listmaker
+			testlist1 star_EQUAL pick_yield_expr_testlist dictorsetmaker 
+			testlist opt_yield_test testlist_comp lambdef pick_yield_expr_testlist_comp star_trailer yield_expr pick_comp_for pick_for_test opt_testlist
 %start start
 
 
@@ -142,63 +144,253 @@ small_stmt // Used in: simple_stmt, small_stmt_STAR_OR_SEMI
 	| assert_stmt
 	;
 expr_stmt // Used in: small_stmt
-	: testlist augassign pick_yield_expr_testlist  
-	| testlist star_EQUAL {SymbolTable::getInstance().insert($1->getVariable(),$2); 
+	: testlist PLUSEQUAL pick_yield_expr_testlist { 
+	  Ast* a;
+	  if($3->getNodetype() == 'V') {
+	   a = new PlusExp( 
+                         SymbolTable::getInstance().retrieveValue($1->getVariable()),
+                         SymbolTable::getInstance().retrieveValue($3->getVariable())
+                         );
+	   SymbolTable::getInstance().insert(
+                                        $1->getVariable(),
+                                        a->getOutput(
+                                                     SymbolTable::getInstance().retrieveValue($1->getVariable()),
+                                                     SymbolTable::getInstance().retrieveValue($3->getVariable())
+                                                    )
+                                            );
+	}
+	else {
+	  a = new PlusExp(
+                          SymbolTable::getInstance().retrieveValue($1->getVariable()),
+                          $3
+                         );
+	   SymbolTable::getInstance().insert(
+                                        $1->getVariable(),
+                                        a->getOutput(
+                                                    SymbolTable::getInstance().retrieveValue($1->getVariable()),
+                                                     $3
+                                                    )
+                                            );
+	}  
+	  std::cout << ">>> " ; 
+	}
+	|testlist MINEQUAL pick_yield_expr_testlist { 
+	  Ast* a;
+	  if($3->getNodetype() == 'V'){
+	   a = new MinusExp(
+                           SymbolTable::getInstance().retrieveValue($1->getVariable()),
+                           SymbolTable::getInstance().retrieveValue($3->getVariable())
+                           );
+	   SymbolTable::getInstance().insert(
+                                            $1->getVariable(),
+                                            a->getOutput(
+                                                        SymbolTable::getInstance().retrieveValue($1->getVariable()),
+                                                        SymbolTable::getInstance().retrieveValue($3->getVariable())
+                                                        )
+                                            );
+	}
+	else {
+	  a = new MinusExp(
+                          SymbolTable::getInstance().retrieveValue($1->getVariable()),
+                          $3
+                          );
+	  SymbolTable::getInstance().insert(
+                                            $1->getVariable(),
+                                            a->getOutput(
+                                                         SymbolTable::getInstance().retrieveValue($1->getVariable()),
+                                                         $3
+                                                        )
+                                            );
+        }	  
+	   std::cout << ">>> " ;  
+        }
+	|testlist STAREQUAL pick_yield_expr_testlist { 
+	   Ast* a;
+	  if($3->getNodetype() == 'V'){
+	   a = new MultExp(
+                          SymbolTable::getInstance().retrieveValue($1->getVariable()),
+                          SymbolTable::getInstance().retrieveValue($3->getVariable())
+                          );
+	   SymbolTable::getInstance().insert(
+                                           $1->getVariable(),
+                                           a->getOutput(
+                                                       SymbolTable::getInstance().retrieveValue($1->getVariable()),
+                                                       SymbolTable::getInstance().retrieveValue($3->getVariable())
+                                                       )
+                                            );
+	}
+	else {
+	  a = new MultExp(SymbolTable::getInstance().retrieveValue($1->getVariable()),$3);
+	  SymbolTable::getInstance().insert(
+                                          $1->getVariable(),
+                                          a->getOutput(
+                                                      SymbolTable::getInstance().retrieveValue($1->getVariable()),
+                                                      $3)
+                                           );
+	}
+	    std::cout << ">>> " ;  
+	}
+	|testlist SLASHEQUAL pick_yield_expr_testlist { 
+	   Ast* a;
+	  if($3->getNodetype() == 'V'){
+	   a = new DivExp(
+                         SymbolTable::getInstance().retrieveValue($1->getVariable()),
+                         SymbolTable::getInstance().retrieveValue($3->getVariable())
+                         );
+	   SymbolTable::getInstance().insert(
+                                            $1->getVariable(),
+                                            a->getOutput(
+                                                        SymbolTable::getInstance().retrieveValue($1->getVariable()),
+                                                        SymbolTable::getInstance().retrieveValue($3->getVariable())
+                                                        )
+                                            );
+	}
+	else {
+	  a = new DivExp(SymbolTable::getInstance().retrieveValue($1->getVariable()),$3);
+	   SymbolTable::getInstance().insert(
+                                          $1->getVariable(),
+                                          a->getOutput(
+                                                      SymbolTable::getInstance().retrieveValue($1->getVariable()),
+                                                       $3 
+                                                       )
+                                             );
+	}  
+	   std::cout << ">>> " ;  
+	}
+	|testlist PERCENTEQUAL pick_yield_expr_testlist { 
+	   Ast* a;
+	  if($3->getNodetype() == 'V'){
+	   a = new ModExp(
+                        SymbolTable::getInstance().retrieveValue($1->getVariable()),
+                        SymbolTable::getInstance().retrieveValue($3->getVariable())
+                        );
+	    SymbolTable::getInstance().insert( 
+                                           $1->getVariable(),
+                                           a->getOutput(
+                                                       SymbolTable::getInstance().retrieveValue($1->getVariable()),
+                                                       SymbolTable::getInstance().retrieveValue($3->getVariable())
+                                                       )
+                                             );
+	 }
+	 else {
+	  a = new ModExp(SymbolTable::getInstance().retrieveValue($1->getVariable()),$3);
+	   SymbolTable::getInstance().insert(
+                                            $1->getVariable(),
+                                            a->getOutput(
+                                                        SymbolTable::getInstance().retrieveValue($1->getVariable()),
+                                                        $3
+                                                        )
+                                            );
+        }  
+	   std::cout << ">>> " ;  
+	}
+	
+	|testlist AMPEREQUAL pick_yield_expr_testlist 
+	|testlist VBAREQUAL pick_yield_expr_testlist  
+	|testlist CIRCUMFLEXEQUAL pick_yield_expr_testlist  
+	|testlist LEFTSHIFTEQUAL pick_yield_expr_testlist  
+	|testlist RIGHTSHIFTEQUAL pick_yield_expr_testlist  
+	|testlist DOUBLESTAREQUAL pick_yield_expr_testlist { 
+	   Ast* a;
+	  if($3->getNodetype() == 'V'){
+	    a = new ExpoExp(
+                           SymbolTable::getInstance().retrieveValue($1->getVariable()),
+                           SymbolTable::getInstance().retrieveValue($3->getVariable())
+                          );
+	    SymbolTable::getInstance().insert( 
+                                          $1->getVariable(),
+                                          a->getOutput(
+                                                       SymbolTable::getInstance().retrieveValue($1->getVariable()),
+                                                       SymbolTable::getInstance().retrieveValue($3->getVariable())
+                                                      )
+                                           );
+	 }
+	 else {
+	    a = new MinusExp(SymbolTable::getInstance().retrieveValue($1->getVariable()),$3);
+	    SymbolTable::getInstance().insert(
+                                           $1->getVariable(),
+                                           a->getOutput(SymbolTable::getInstance().retrieveValue($1->getVariable()),$3)
+                                           );
+	}
+	   std::cout << ">>> " ;  
+	}
+	|testlist DOUBLESLASHEQUAL pick_yield_expr_testlist { 
+	   Ast* a;
+	  if($3->getNodetype() == 'V'){
+	   a = new DoubleSlashExp(
+                                 SymbolTable::getInstance().retrieveValue($1->getVariable()),
+                                 SymbolTable::getInstance().retrieveValue($3->getVariable())
+                                 );
+	   SymbolTable::getInstance().insert(
+                                             $1->getVariable(), 
+                                             a->getOutput(
+                                                         SymbolTable::getInstance().retrieveValue($1->getVariable()),
+                                                         SymbolTable::getInstance().retrieveValue($3->getVariable())
+                                                         )
+                                            );
+	 }
+	 else {
+	   a = new DoubleSlashExp(SymbolTable::getInstance().retrieveValue($1->getVariable()),$3);
+	   SymbolTable::getInstance().insert(
+                                             $1->getVariable(),
+                                             a->getOutput(SymbolTable::getInstance().retrieveValue($1->getVariable()),$3)
+                                            );
+	 } 
+	   std::cout << ">>> " ;  
+	}
+	| testlist star_EQUAL {
+	    SymbolTable::getInstance().insert($1->getVariable(),$2); 
+	    std::cout << ">>> ";
 	  //SymbolTable::getInstance().display(); 
 	}
 	;
 pick_yield_expr_testlist // Used in: expr_stmt, star_EQUAL
-	: yield_expr
-	| testlist
+	: yield_expr { $$ = $1; }
+	| testlist   { $$ = $1; }
 	;
 star_EQUAL // Used in: expr_stmt, star_EQUAL
-	: EQUAL pick_yield_expr_testlist star_EQUAL {$$ = $2;}
-	| %empty
+	: EQUAL pick_yield_expr_testlist star_EQUAL { $$= $2; }
+	| %empty                                    { $$ = 0; }
 	;
-augassign // Used in: expr_stmt
-	: PLUSEQUAL 
-	| MINEQUAL  
-	| STAREQUAL 
-	| SLASHEQUAL
-	| PERCENTEQUAL
-	| AMPEREQUAL
-	| VBAREQUAL
-	| CIRCUMFLEXEQUAL
-	| LEFTSHIFTEQUAL
-	| RIGHTSHIFTEQUAL
-	| DOUBLESTAREQUAL
-	| DOUBLESLASHEQUAL
-	;
+
 print_stmt // Used in: small_stmt
 	: PRINT opt_test { 
-	    if($2->getNodetype() == 'V'){
-		   if(SymbolTable::getInstance().isPresent($2->getVariable()))
-		   std::cout << "= " << (SymbolTable::getInstance().retrieveValue($2->getVariable()))->getNumber() << std::endl << ">>> "; 
-		   else
+	     if($2->getNodetype() == 'V'){
+		  if(SymbolTable::getInstance().isPresent($2->getVariable())){
+		      if((SymbolTable::getInstance().retrieveValue($2->getVariable()))->getNodetype() == 'F'){
+			std::cout << std::fixed << std::setprecision(3) << "= " 
+                                                << (SymbolTable::getInstance().retrieveValue($2->getVariable()))->getNumber() 
+                                                << std::endl << ">>> "; 
+		      }
+                      else {
+			std::cout << "= " 
+                                  << (SymbolTable::getInstance().retrieveValue($2->getVariable()))->getNumber() 
+                                  << std::endl << ">>> "; 
+                      }
+			
+                 }
+		 else  { 
 		   std::cout << "symbol not initialized" << std::endl;
-		}
-		else{
-		std::cout << "= " << (eval($2)->getNumber()) << std::endl << ">>> "; 
-		unsigned int order_label = 1;
-		std::fstream output;
-		output.open("graph.gv", std::ios::out);
-		output << "digraph G {" << std::endl;
-		output<< order_label << "[label=\""<<$2->getNodetype()<<"\"]" <<std::endl;
-		//makeGraph($2, output, order_label);
-		output << "}" << std::endl;
-		output.close();
-		treeFree($2);
-		}
+		 }
+	    }
+            else {
+	         if(eval($2)->getNodetype() == 'F')
+	            std::cout << std::fixed << std::setprecision(3) << "= " << (eval($2)->getNumber()) << std::endl << ">>> "; 
+		else
+		    std::cout << "= " << (eval($2)->getNumber()) << std::endl << ">>> "; 
+	    }
+	    treeFree($2);
+	    //SymbolTable::getInstance().display(); 
 	}
-	| PRINT RIGHTSHIFT test opt_test_2
+	| PRINT RIGHTSHIFT test opt_test_2 
 	;
 opt_test // Used in: print_stmt
-	: test star_COMMA_test  {$$ = $1;}
-	| %empty
+	: test star_COMMA_test  { $$ = $1; }
+	| %empty     { $$ = 0; }     
 	;
 opt_test_2 // Used in: print_stmt
-	: plus_COMMA_test
-	| %empty
+	: plus_COMMA_test { $$ = 0; }
+	| %empty { $$ = 0; }
 	;
 del_stmt // Used in: small_stmt
 	: DEL exprlist
@@ -386,28 +578,28 @@ test // Used in: opt_EQUAL_test, print_stmt, opt_test, raise_stmt,
      // opt_test_only, sliceop, testlist, dictorsetmaker, argument, 
      // testlist1, star_COMMA_test, star_test_COLON_test,
      // plus_COMMA_test, dictarg, listarg
-	: or_test opt_IF_ELSE { $$ = $1; }
-	| lambdef
+	: or_test opt_IF_ELSE {  $$ = $1; }
+	| lambdef  {$$=0;}
 	;
 opt_IF_ELSE // Used in: test
 	: IF or_test ELSE test
-	| %empty
+	| %empty 
 	;
 or_test // Used in: old_test, test, opt_IF_ELSE, or_test, comp_for
-	: and_test 
-	| or_test OR and_test
+	: and_test {$$=$1;}
+	| or_test OR and_test 
 	;
 and_test // Used in: or_test, and_test
-	: not_test
-	| and_test AND not_test
+	: not_test {$$ = $1;}
+	| and_test AND not_test 
 	;
 not_test // Used in: and_test, not_test
-	: NOT not_test
+	: NOT not_test { $$ = $2; }
 	| comparison  
 	; 
 comparison // Used in: not_test, comparison
-	: expr 
-	| comparison comp_op expr
+	: expr  {$$ = $1;}
+	| comparison comp_op expr 
 	;
 comp_op // Used in: comparison
 	: LESS
@@ -424,20 +616,20 @@ comp_op // Used in: comparison
 	;
 expr // Used in: exec_stmt, with_item, comparison, expr, 
      // exprlist, star_COMMA_expr
-	: xor_expr 
-	| expr BAR xor_expr
+	: xor_expr {$$ = $1;}
+	| expr BAR xor_expr 
 	;
 xor_expr // Used in: expr, xor_expr
 	: and_expr { $$ = $1; }
-	| xor_expr CIRCUMFLEX and_expr
+	| xor_expr CIRCUMFLEX and_expr 
 	;
 and_expr // Used in: xor_expr, and_expr
 	: shift_expr {$$= $1;}
-	| and_expr AMPERSAND shift_expr
+	| and_expr AMPERSAND shift_expr 
 	;
 shift_expr // Used in: and_expr, shift_expr
 	: arith_expr {$$= $1;}
-	| shift_expr pick_LEFTSHIFT_RIGHTSHIFT arith_expr
+	| shift_expr pick_LEFTSHIFT_RIGHTSHIFT arith_expr 
 	;
 pick_LEFTSHIFT_RIGHTSHIFT // Used in: shift_expr
 	: LEFTSHIFT
@@ -445,97 +637,162 @@ pick_LEFTSHIFT_RIGHTSHIFT // Used in: shift_expr
 	;
 arith_expr // Used in: shift_expr, arith_expr
 	: term  {  $$ = $1; }
-    | arith_expr PLUS term  { if($1->getNodetype() == 'V'){$1 = SymbolTable::getInstance().retrieveValue($1->getVariable());} else if($3->getNodetype() == 'V'){$3 = SymbolTable::getInstance().retrieveValue($3->getVariable());} $$ = new PlusExp($1,$3); }
-    | arith_expr MINUS term { if($1->getNodetype() == 'V'){$1 = SymbolTable::getInstance().retrieveValue($1->getVariable());} else if($3->getNodetype() == 'V'){$3 = SymbolTable::getInstance().retrieveValue($3->getVariable());}$$ = new MinusExp($1,$3); }
+        | arith_expr PLUS term  { 
+	    if($1->getNodetype() == 'V'){
+		 $1 = SymbolTable::getInstance().retrieveValue($1->getVariable());
+	    }  
+	    if($3->getNodetype() == 'V'){
+		 $3 = SymbolTable::getInstance().retrieveValue($3->getVariable());
+	    } 
+	    Ast* plus = new PlusExp($1,$3);
+	    $$ = plus->getOutput($1,$3);
+	}
+        | arith_expr MINUS term { 
+	    if($1->getNodetype() == 'V'){
+		   $1 = SymbolTable::getInstance().retrieveValue($1->getVariable());
+	    } 
+	    if($3->getNodetype() == 'V'){
+		   $3 = SymbolTable::getInstance().retrieveValue($3->getVariable());
+	    } 
+	    Ast* minus = new MinusExp($1,$3);
+	    $$ = minus->getOutput($1,$3);
+		
+	}
 	;
-/*pick_PLUS_MINUS // Used in: arith_expr
-	: PLUS  { $$ = '+' ; } 
-	| MINUS { $$ = '-' ; }
-	;
-	*/
 term // Used in: arith_expr, term
 	: factor { $$ = $1; }
-	| term STAR factor  {  if($1->getNodetype() == 'V'){$1 = SymbolTable::getInstance().retrieveValue($1->getVariable());} else if($3->getNodetype() == 'V'){$3 = SymbolTable::getInstance().retrieveValue($3->getVariable());}$$ = new MultExp($1,$3); }
-    | term SLASH factor {if($1->getNodetype() == 'V'){$1 = SymbolTable::getInstance().retrieveValue($1->getVariable());} else if($3->getNodetype() == 'V'){$3 = SymbolTable::getInstance().retrieveValue($3->getVariable());} $$ = new DivExp($1,$3);   } 
-    | term PERCENT factor { if($1->getNodetype() == 'V'){$1 = SymbolTable::getInstance().retrieveValue($1->getVariable());} else if($3->getNodetype() == 'V'){$3 = SymbolTable::getInstance().retrieveValue($3->getVariable());}$$ = new ModExp($1,$3); }
-    | term DOUBLESLASH factor{ if($1->getNodetype() == 'V'){$1 = SymbolTable::getInstance().retrieveValue($1->getVariable());} else if($3->getNodetype() == 'V'){$3 = SymbolTable::getInstance().retrieveValue($3->getVariable());}$$ = new DoubleSlashExp($1,$3);} //$$ = ($1/$3) - 1;   }
-	;
-/*pick_multop // Used in: term
-	: STAR        { $$ = '*'; }
-	| SLASH       { $$ = '/'; }
-	| PERCENT     { $$ = '%'; }
-	| DOUBLESLASH { $$ = '^'; }
-	;
-*/	
+	| term STAR factor  {  
+	    if($1->getNodetype() == 'V'){
+	      $1 = SymbolTable::getInstance().retrieveValue($1->getVariable());
+	    } 
+	    if($3->getNodetype() == 'V'){
+	      $3 = SymbolTable::getInstance().retrieveValue($3->getVariable());
+            }
+	    Ast* mult = new MultExp($1,$3);
+	    $$ = mult->getOutput($1,$3);
+	}
+        | term SLASH factor {
+	    if($1->getNodetype() == 'V'){
+		   $1 = SymbolTable::getInstance().retrieveValue($1->getVariable());
+	    }  
+	    if($3->getNodetype() == 'V'){
+		  $3 = SymbolTable::getInstance().retrieveValue($3->getVariable());
+	    }
+	    if($3->getNumber() == 0){
+		  std::cout << "DivisionByZeroError" << std::endl;
+		  $$ = new IntNumber('I',0);
+	    }
+            else{		
+		Ast* div = new DivExp($1,$3);
+		$$ = div->getOutput($1,$3); 
+            }		
+	} 
+        | term PERCENT factor { 
+	    if($1->getNodetype() == 'V'){
+		   $1 = SymbolTable::getInstance().retrieveValue($1->getVariable());
+	    } 
+	    if($3->getNodetype() == 'V'){
+		   $3 = SymbolTable::getInstance().retrieveValue($3->getVariable());
+	    }
+	    if($3->getNumber() == 0){
+		  std::cout << "DivisionByZeroError" << std::endl;
+		  $$ = new IntNumber('I',0);
+            }
+	    else {
+		Ast* percent = new ModExp($1,$3);
+		$$ = percent->getOutput($1,$3);
+	    }
+	}
+        | term DOUBLESLASH factor{     
+	    if($1->getNodetype() == 'V'){
+		   $1 = SymbolTable::getInstance().retrieveValue($1->getVariable());
+	    } 
+	    if($3->getNodetype() == 'V'){
+		   $3 = SymbolTable::getInstance().retrieveValue($3->getVariable());
+            }
+	    if($3->getNumber() == 0){
+		   std::cout << "DivisionByZeroError" << std::endl;
+		    $$ = new IntNumber('I',0);
+	    }	
+	    else {
+		Ast* dslash = new DoubleSlashExp($1,$3);
+		$$ = dslash->getOutput($1,$3);
+            }		
+	}
+	;	
 factor // Used in: term, factor, power
 	: PLUS  factor { $$ = $2; }
-    | MINUS factor {if($2->getNodetype() == 'V'){$2 = SymbolTable::getInstance().retrieveValue($2->getVariable());} $$ = new UMinusExp($2); }
-    //| TILDE factor { $$ = new Tilde($2); }
-	| power { $$ = $1; }//$$ = $1; }
+        | MINUS factor {
+	    if($2->getNodetype() == 'V'){
+	      $2 = SymbolTable::getInstance().retrieveValue($2->getVariable());
+	    } 
+	    Ast* uminus = new UMinusExp($2);
+	    $$ = uminus->getOutput($2,NULL);
+	}
+        | TILDE factor { $$ = $2; }
+	| power { $$ = $1; }
 	;
 power // Used in: factor
-	: atom star_trailer DOUBLESTAR factor    { if($1->getNodetype() == 'V'){$1 = SymbolTable::getInstance().retrieveValue($1->getVariable());} else if($4->getNodetype() == 'V'){$4 = SymbolTable::getInstance().retrieveValue($4->getVariable());} $$ = new ExpoExp($1,$4); }//$$ = pow($1,$4); }
-	| atom star_trailer                      {  $$ = $1; }  //$$ = $1; }  
+	: atom star_trailer DOUBLESTAR factor    { 
+	    if($1->getNodetype() == 'V'){
+	       $1 = SymbolTable::getInstance().retrieveValue($1->getVariable());
+	    } 
+	    if($4->getNodetype() == 'V'){
+	      $4 = SymbolTable::getInstance().retrieveValue($4->getVariable());
+	    }
+	    Ast* expo = new ExpoExp($1,$4);
+	    $$ = expo->getOutput($1,$4);     
+	}
+	| atom star_trailer                      {  $$ = $1; } 
 	;
 star_trailer // Used in: power, star_trailer
-	: trailer star_trailer
-	| %empty
+	: trailer star_trailer {$$=$2;}
+	| %empty {$$=0;}
 	;
 atom // Used in: power
-	: LPAR opt_yield_test RPAR {  $$ = $2; }            //$$ = $2; }
-	| LSQB opt_listmaker RSQB
-	| LBRACE opt_dictorsetmaker RBRACE
-	| BACKQUOTE testlist1 BACKQUOTE
+	: LPAR opt_yield_test RPAR { $$ = $2; }            
+	| LSQB opt_listmaker RSQB  { $$ = $2; }
+	| LBRACE opt_dictorsetmaker RBRACE  { $$ = $2; }
+	| BACKQUOTE testlist1 BACKQUOTE     { $$ = $2; }
 	| NAME         {  $$ = new Variable('V',$1);  }
 	| INTNUMBER    {  $$ = new IntNumber('I',atoi($1));}
 	| FLOATNUMBER  {
-                  	/*char * ret = new char[strlen($1) + 2]; 
-					strcpy(ret,$1);
-					
-					ret[strlen($1)] = 'f';  
-					ret[strlen($1)+1] = '\0';
-					double d = atof(ret);
-					float f = static_cast<float>(d);
-					std::cout << f << std::endl;*/
-					const char* c =$1;
-                    char* pEnd;
-                     float f1;
-                    f1 = strtof (c,&pEnd);	
-					$$ = new FloatNumber('F',f1); 
-					}
-	| plus_STRING
+	    double d = atof($1);
+	    $$ = new FloatNumber('F',d); 
+	}
+	| plus_STRING  { $$ = 0; }
 	;
 pick_yield_expr_testlist_comp // Used in: opt_yield_test
-	: yield_expr
-	| testlist_comp 
+	: yield_expr    { $$ = $1;}
+	| testlist_comp { $$ = $1;}
 	;
 opt_yield_test // Used in: atom
-	: pick_yield_expr_testlist_comp 
-	//| %empty
+	: pick_yield_expr_testlist_comp { $$ = $1; }
+	| %empty { $$ = 0; }
 	;
 opt_listmaker // Used in: atom
-	: listmaker
-	| %empty
+	: listmaker { $$ = $1;}
+	| %empty { $$ = 0; }
 	;
 opt_dictorsetmaker // Used in: atom
-	: dictorsetmaker
-//	| %empty
+	: dictorsetmaker {$$ = $1;}
+	| %empty { $$ = 0; }
 	;
 plus_STRING // Used in: atom, plus_STRING
 	: STRING plus_STRING
 	| STRING
 	;
 listmaker // Used in: opt_listmaker
-	: test list_for
-	| test star_COMMA_test
+	: test list_for { $$ = $1;}
+	| test star_COMMA_test { $$ = $1;}
 	;
 testlist_comp // Used in: pick_yield_expr_testlist_comp
-	: test comp_for
-	| test star_COMMA_test 
+	: test comp_for { $$ = $1; }
+	| test star_COMMA_test { $$ = $1; }
 	;
 lambdef // Used in: test
-	: LAMBDA varargslist COLON test
-	| LAMBDA COLON test
+	: LAMBDA varargslist COLON test {$$=0;}
+	| LAMBDA COLON test            {$$=0;}
 	;
 trailer // Used in: star_trailer
 	: LPAR opt_arglist RPAR
@@ -570,24 +827,24 @@ testlist // Used in: expr_stmt, pick_yield_expr_testlist,
 	: test star_COMMA_test {$$ = $1; }
 	;
 dictorsetmaker // Used in: opt_dictorsetmaker
-	: test COLON test pick_comp_for
-	| test pick_for_test
+	: test COLON test pick_comp_for {$$ = $1;}
+	| test pick_for_test {$$=$1;}
 	;
 pick_comp_for // Used in: dictorsetmaker
-	: comp_for
-	| star_test_COLON_test
+	: comp_for {$$=0;}
+	| star_test_COLON_test {$$=0;}
 	;
 pick_for_test // Used in: dictorsetmaker
-	: comp_for
-	| star_COMMA_test
+	: comp_for {$$=0;}
+	| star_COMMA_test{$$=0;} 
 	;
 classdef // Used in: decorated, compound_stmt
 	: CLASS NAME LPAR opt_testlist RPAR COLON suite
 	| CLASS NAME COLON suite
 	;
 opt_testlist // Used in: classdef
-	: testlist
-	| %empty
+	: testlist {$$=$1;}
+	| %empty {$$=0;}
 	;
 arglist // Used in: opt_arglist, arglist
 	: argument COMMA arglist
@@ -631,16 +888,16 @@ comp_if // Used in: comp_iter
 	| IF old_test
 	;
 testlist1 // Used in: atom, testlist1
-	: test
-	| testlist1 COMMA test
+	: test { $$ = $1; }
+	| testlist1 COMMA test { $$ = $1; }
 	;
 encoding_decl // Used in: start
 	: NAME
 	;
 yield_expr // Used in: pick_yield_expr_testlist, yield_stmt, 
            // pick_yield_expr_testlist_comp
-	: YIELD testlist
-	| YIELD
+	: YIELD testlist {$$=$2;}
+	| YIELD {$$=0;}
 	;
 star_fpdef_notest // Used in: fplist, star_fpdef_notest
 	: COMMA fpdef star_fpdef_notest
@@ -658,9 +915,9 @@ star_COMMA_fpdef // Used in: varargslist, star_COMMA_fpdef
 	| %empty
 	;
 star_COMMA_test // Used in: opt_test, listmaker, testlist_comp, testlist, pick_for_test, star_COMMA_test
-	: COMMA test star_COMMA_test
-	| COMMA
-	| %empty
+	: COMMA test star_COMMA_test 
+	| COMMA 
+	| %empty 
 	;
 star_test_COLON_test // Used in: pick_comp_for, star_test_COLON_test
 	: COMMA test COLON test star_test_COLON_test
@@ -679,9 +936,9 @@ star_COMMA_import_as_name // Used in: import_as_names,
 	| %empty
 	;
 plus_COMMA_test // Used in: opt_test_2, plus_COMMA_test
-	: COMMA test plus_COMMA_test
-	| COMMA test COMMA
-	| COMMA test
+	: COMMA test plus_COMMA_test { $$ = $2; }
+	| COMMA test COMMA { $$ = $2; }
+	| COMMA test { $$ = $2; }
 	;
 plus_COMMA_old_test // Used in: testlist_safe, plus_COMMA_old_test
 	: COMMA old_test plus_COMMA_old_test

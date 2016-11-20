@@ -1,7 +1,7 @@
-CCC = clang++
+CCC = g++
 LEX = flex
 YACC = bison
-CFLAGS = -Wall
+CFLAGS = -Wall -std=c++11
 LEXFLAGS = -Wno-unused
 
 OBJS = main.o ast.o parse.tab.o lex.yy.o

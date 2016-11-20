@@ -1,0 +1,8 @@
+>>> = 0
+>>> = 14
+>>> DivisionByZeroError
+= 0
+>>> >>> DivisionByZeroError
+= 5.500
+>>> >>> >>> = 0.750
+>>> 
