@@ -253,7 +253,8 @@ void SuiteNode::execute() {
 		    std::cout << "pyt> " << tm.getEntry((*ptr)->getOutput(NULL,NULL)->getVariable())->getNumber() << std::endl;
 		 }
 	 }
-	  if( (*ptr)->getNodetype() == '+' || (*ptr)->getNodetype() == '-' ){
+	  if( (*ptr)->getNodetype() == '+' || (*ptr)->getNodetype() == '-' || (*ptr)->getNodetype() == '*' || (*ptr)->getNodetype() == '/'
+	                                   || (*ptr)->getNodetype() == '|'|| (*ptr)->getNodetype() == '%'|| (*ptr)->getNodetype() == '^' ){
 		 tm.addTable((*ptr)->getLeft()->getVariable(),(*ptr)->getOutput(tm.getEntry((*ptr)->getLeft()->getVariable()), (*ptr)->getRight()));
       }
 	 ++ptr;

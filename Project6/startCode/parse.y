@@ -238,7 +238,7 @@ expr_stmt // Used in: small_stmt
 	  if($3->getNodetype() == 'V'){
 			   if(tm.getCurrentScope() == 0){
 			     std::cout << "pyt> " << tm.getEntry($1->getVariable())->getNumber() << std::endl;
-			   a = new StarExp(
+			   a = new MultExp(
 								   tm.getEntry($1->getVariable()),
 								   tm.getEntry($3->getVariable())
 								   );
@@ -249,12 +249,12 @@ expr_stmt // Used in: small_stmt
 										);
 			}
 			else{
-			   $$ = new StarExp($1,$3);
+			   $$ = new MultExp($1,$3);
 			}
 	}
 	else {
 			 if(tm.getCurrentScope() == 0){
-			  a = new StarExp(
+			  a = new MultExp(
 								  tm.getEntry($1->getVariable()),
 								  $3
 								  );
@@ -265,7 +265,7 @@ expr_stmt // Used in: small_stmt
 						);
 				}	  
 			  else{
-			      $$ = new StarExp($1,$3);
+			      $$ = new MultExp($1,$3);
 			  }
 	}
     }
@@ -408,7 +408,7 @@ expr_stmt // Used in: small_stmt
 	else {
 			 if(tm.getCurrentScope() == 0){
 			   std::cout << "pyt> " << tm.getEntry($1->getVariable())->getNumber() << std::endl;
-			  a = new DoubleSlashExp
+			  a = new DoubleSlashExp(
 								  tm.getEntry($1->getVariable()),
 								  $3
 								  );
