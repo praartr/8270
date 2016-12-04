@@ -58,25 +58,26 @@ void yyerror (char const *);
 
 start
 	: file_input  
-	| encoding_decl  
-	//| single_input  
+	| encoding_decl
+        ;  
+/*	| single_input  
 	;
-//single_input // Used in: start
-//	: NEWLINE 
-//	| simple_stmt
-//	| compound_stmt NEWLINE
-//	;
+single_input // Used in: start
+	: NEWLINE 
+	| simple_stmt
+	| compound_stmt NEWLINE
+	;
 
-//single_input // Used in: start
-//	: NEWLINE 
-//	| stmt 
-	;
+single_input // Used in: start
+	: NEWLINE 
+	| stmt 
+*/	;
 file_input // Used in: start
 	: star_NEWLINE_stmt ENDMARKER 
 	;
 pick_NEWLINE_stmt // Used in: star_NEWLINE_stmt
-	: NEWLINE {$$=0;}
-	| stmt { }//$$ = $1->eval();}
+	: NEWLINE { $$ = 0;  }
+	| stmt    { $$ = $1; }
 	;
 star_NEWLINE_stmt // Used in: file_input, star_NEWLINE_stmt
 	: pick_NEWLINE_stmt star_NEWLINE_stmt
@@ -100,9 +101,10 @@ decorated // Used in: compound_stmt
 	;
 funcdef // Used in: decorated, compound_stmt
 	: DEF NAME parameters COLON suite { 
-	     $$ = new FuncNode($2,$5);
-	     std::string s($2);
-	     tm.addTable(s,$$);
+	    
+	    $$ = new FuncNode($2,$5);
+	    std::string s($2);
+	    tm.addTable(s,$$);
 	}
 	;
 parameters // Used in: funcdef
@@ -137,14 +139,14 @@ fplist // Used in: fpdef
 	: fpdef star_fpdef_notest
 	;
 stmt // Used in: pick_NEWLINE_stmt, plus_stmt
-	: simple_stmt { $$ = $1; }
+	: simple_stmt   { $$ = $1; }
 	| compound_stmt { $$ = $1; }
 	;
 simple_stmt // Used in: single_input, stmt, suite
 	: small_stmt small_stmt_STAR_OR_SEMI NEWLINE {$$=$1;}
 	;
 small_stmt // Used in: simple_stmt, small_stmt_STAR_OR_SEMI
-	: expr_stmt { $$ = $1; }
+	: expr_stmt  { $$ = $1; }
 	| print_stmt { $$ = $1; }
 	| del_stmt
 	| pass_stmt
@@ -155,284 +157,153 @@ small_stmt // Used in: simple_stmt, small_stmt_STAR_OR_SEMI
 	| assert_stmt
 	;
 expr_stmt // Used in: small_stmt
-	: testlist PLUSEQUAL pick_yield_expr_testlist {
-	Ast* a;
-	if($3->getNodetype() == 'V') {
-			  if(tm.getCurrentScope() == 0){
-				 a = new PlusExp( 
-								 tm.getEntry($1->getVariable()),
-								 tm.getEntry($3->getVariable())
-								 );
-				 tm .addTable(	   $1->getVariable(),
-											a->getOutput(  tm.getEntry($1->getVariable()),
-														   tm.getEntry($3->getVariable())
-														
-										));
+	:testlist PLUSEQUAL pick_yield_expr_testlist {
+	    Ast* a;
+	    if($3->getNodetype() == 'V') {
+	        if(tm.getCurrentScope() == 0){
+		        a = new PlusExp(  tm.getEntry($1->getVariable()), tm.getEntry($3->getVariable()) );
+		        tm .addTable( $1->getVariable(), a->getOutput(  tm.getEntry($1->getVariable()), tm.getEntry($3->getVariable()) ) );
 																	
-			  }
-			  else {
-			     $$ = new PlusExp($1,$3);
-			  }
-	}
-	else {
-			
-			  if(tm.getCurrentScope() == 0){
-				  std::cout << "pyt> " << tm.getEntry($1->getVariable())->getNumber() << std::endl;
-				  a = new PlusExp(
-									  tm.getEntry($1->getVariable()),
-									  $3
-									 );
-							std::cout <<  a->getOutput(  tm.getEntry($1->getVariable()),$3 )->getNumber() << std::endl;  
-				tm .addTable($1->getVariable(),
-												a->getOutput(  tm.getEntry($1->getVariable()),
-															  $3
-															)
-							 );
-			   }
-			   else{
-			     $$ = new PlusExp($1,$3);
-			   }
-	}
-      	
-	  
-	}
-	|testlist MINEQUAL pick_yield_expr_testlist { 
-	  Ast* a;
-	  if($3->getNodetype() == 'V'){
-			   if(tm.getCurrentScope() == 0){
-			     
-			   a = new MinusExp(
-								   tm.getEntry($1->getVariable()),
-								   tm.getEntry($3->getVariable())
-								   );
-			 tm .addTable(   $1->getVariable(),
-											a->getOutput(  tm.getEntry($1->getVariable()),
-														   tm.getEntry($3->getVariable())
-														)
-										);
+	        }
+	        else 
+                $$ = new PlusExp($1,$3);
+	    }
+	    else {
+	        if(tm.getCurrentScope() == 0){
+		        a = new PlusExp( tm.getEntry($1->getVariable()), $3);
+		        tm .addTable( $1->getVariable(), a->getOutput(  tm.getEntry($1->getVariable()), $3) );
+	        }
+	        else
+	            $$ = new PlusExp($1,$3);	
+	    }	  
+    }
+	| testlist MINEQUAL pick_yield_expr_testlist { 
+	    Ast* a;
+	    if($3->getNodetype() == 'V'){
+	        if(tm.getCurrentScope() == 0){    
+		        a = new MinusExp( tm.getEntry($1->getVariable()), tm.getEntry($3->getVariable()) );
+			    tm .addTable( $1->getVariable(), a->getOutput(  tm.getEntry($1->getVariable()), tm.getEntry($3->getVariable()) ) );
 			}
-			else{
+			else
 			   $$ = new MinusExp($1,$3);
-			}
-	}
-	else {
-			 if(tm.getCurrentScope() == 0){
-			 std::cout << "pyt> " << tm.getEntry($1->getVariable())->getNumber() << std::endl;
-			  a = new MinusExp(
-								  tm.getEntry($1->getVariable()),
-								  $3
-								  );
-			  tm .addTable(  $1->getVariable(),
-											a->getOutput(  tm.getEntry($1->getVariable()),
-														   $3
-														)
-						);
-				}	  
-			  else{
-			      $$ = new MinusExp($1,$3);
-			  }
-	}
+	    }
+	    else {
+			if(tm.getCurrentScope() == 0){
+			    a = new MinusExp( tm.getEntry($1->getVariable()), $3 );
+			    tm .addTable(  $1->getVariable(), a->getOutput(  tm.getEntry($1->getVariable()), $3 ));
+			}	  
+			 else
+			    $$ = new MinusExp($1,$3);
+	    }
     }
 	|testlist STAREQUAL pick_yield_expr_testlist { 
-	  Ast* a;
-	  if($3->getNodetype() == 'V'){
-			   if(tm.getCurrentScope() == 0){
-			     std::cout << "pyt> " << tm.getEntry($1->getVariable())->getNumber() << std::endl;
-			   a = new MultExp(
-								   tm.getEntry($1->getVariable()),
-								   tm.getEntry($3->getVariable())
-								   );
-			 tm .addTable(   $1->getVariable(),
-											a->getOutput(  tm.getEntry($1->getVariable()),
-														   tm.getEntry($3->getVariable())
-														)
-										);
+	    Ast* a;
+	    if($3->getNodetype() == 'V'){
+			if(tm.getCurrentScope() == 0){
+			    a = new MultExp( tm.getEntry($1->getVariable()), tm.getEntry($3->getVariable()) );
+			    tm .addTable(   $1->getVariable(), a->getOutput(  tm.getEntry($1->getVariable()), tm.getEntry($3->getVariable()) ) );
 			}
-			else{
+			else
 			   $$ = new MultExp($1,$3);
-			}
-	}
-	else {
-			 if(tm.getCurrentScope() == 0){
-			  a = new MultExp(
-								  tm.getEntry($1->getVariable()),
-								  $3
-								  );
-			  tm .addTable(  $1->getVariable(),
-											a->getOutput(  tm.getEntry($1->getVariable()),
-														   $3
-														)
-						);
-				}	  
-			  else{
-			      $$ = new MultExp($1,$3);
-			  }
-	}
+	    }
+	    else {
+			if(tm.getCurrentScope() == 0){
+			    a = new MultExp( tm.getEntry($1->getVariable()), $3 );
+			    tm .addTable(  $1->getVariable(), a->getOutput(  tm.getEntry($1->getVariable()), $3 ));
+		    }	  
+			else
+			    $$ = new MultExp($1,$3);
+	    }
     }
 	|testlist SLASHEQUAL pick_yield_expr_testlist { 
-	  Ast* a;
-	  if($3->getNodetype() == 'V'){
-			   if(tm.getCurrentScope() == 0){
-			   
-			   a = new DivExp(
-								   tm.getEntry($1->getVariable()),
-								   tm.getEntry($3->getVariable())
-								   );
-			 tm .addTable(   $1->getVariable(),
-											a->getOutput(  tm.getEntry($1->getVariable()),
-														   tm.getEntry($3->getVariable())
-														)
-										);
+	    Ast* a;
+	    if($3->getNodetype() == 'V'){
+			if(tm.getCurrentScope() == 0){   
+			    a = new DivExp(tm.getEntry($1->getVariable()), tm.getEntry($3->getVariable()) );
+			    tm.addTable( $1->getVariable(), a->getOutput(  tm.getEntry($1->getVariable()), tm.getEntry($3->getVariable()) ));
 			}
-			else{
+			else
 			   $$ = new DivExp($1,$3);
-			}
-	}
-	else {
-			 if(tm.getCurrentScope() == 0){
-			   std::cout << "pyt> " << tm.getEntry($1->getVariable())->getNumber() << std::endl;
-			  a = new DivExp(
-								  tm.getEntry($1->getVariable()),
-								  $3
-								  );
-			  tm .addTable(  $1->getVariable(),
-											a->getOutput(  tm.getEntry($1->getVariable()),
-														   $3
-														)
-						);
-				}	  
-			  else{
-			      $$ = new DivExp($1,$3);
-			  }
-	}
+	    }
+	    else {
+			if(tm.getCurrentScope() == 0){
+			    a = new DivExp( tm.getEntry($1->getVariable()), $3 );
+			    tm .addTable(  $1->getVariable(), a->getOutput(  tm.getEntry($1->getVariable()), $3 ) );
+			}	  
+			else
+			    $$ = new DivExp($1,$3);
+	    }
     }
 	|testlist PERCENTEQUAL pick_yield_expr_testlist { 
-	  Ast* a;
-	  if($3->getNodetype() == 'V'){
-			   if(tm.getCurrentScope() == 0){
-			   
-			   a = new ModExp(
-								   tm.getEntry($1->getVariable()),
-								   tm.getEntry($3->getVariable())
-								   );
-			 tm .addTable(   $1->getVariable(),
-											a->getOutput(  tm.getEntry($1->getVariable()),
-														   tm.getEntry($3->getVariable())
-														)
-										);
+	    Ast* a;
+	    if($3->getNodetype() == 'V'){
+			if(tm.getCurrentScope() == 0){
+			    a = new ModExp(tm.getEntry($1->getVariable()),tm.getEntry($3->getVariable()));
+			    tm .addTable(  $1->getVariable(), a->getOutput(  tm.getEntry($1->getVariable()),tm.getEntry($3->getVariable()) ) );
 			}
-			else{
+			else
 			   $$ = new ModExp($1,$3);
-			}
-	}
-	else {
-			 if(tm.getCurrentScope() == 0){
-			   std::cout << "pyt> " << tm.getEntry($1->getVariable())->getNumber() << std::endl;
-			  a = new ModExp(
-								  tm.getEntry($1->getVariable()),
-								  $3
-								  );
-			  tm .addTable(  $1->getVariable(),
-											a->getOutput(  tm.getEntry($1->getVariable()),
-														   $3
-														)
-						);
-				}	  
-			  else{
-			      $$ = new ModExp($1,$3);
-			  }
-	}
+	    }
+	    else {
+			if(tm.getCurrentScope() == 0){
+			    a = new ModExp( tm.getEntry($1->getVariable()), $3 );
+			    tm .addTable(  $1->getVariable(),a->getOutput(  tm.getEntry($1->getVariable()), $3 ) );
+			}	  
+			else
+			    $$ = new ModExp($1,$3);
+			  
+	    }
     }
-	
 	|testlist AMPEREQUAL pick_yield_expr_testlist 
 	|testlist VBAREQUAL pick_yield_expr_testlist  
 	|testlist CIRCUMFLEXEQUAL pick_yield_expr_testlist  
 	|testlist LEFTSHIFTEQUAL pick_yield_expr_testlist  
 	|testlist RIGHTSHIFTEQUAL pick_yield_expr_testlist  
 	|testlist DOUBLESTAREQUAL pick_yield_expr_testlist { 
-	  Ast* a;
-	  if($3->getNodetype() == 'V'){
-			   if(tm.getCurrentScope() == 0){
-			   
-			   a = new ExpoExp(
-								   tm.getEntry($1->getVariable()),
-								   tm.getEntry($3->getVariable())
-								   );
-			 tm .addTable(   $1->getVariable(),
-											a->getOutput(  tm.getEntry($1->getVariable()),
-														   tm.getEntry($3->getVariable())
-														)
-										);
+	    Ast* a;
+	    if($3->getNodetype() == 'V'){
+			if(tm.getCurrentScope() == 0){  
+			    a = new ExpoExp(tm.getEntry($1->getVariable()),tm.getEntry($3->getVariable()) );
+			    tm .addTable(   $1->getVariable(), a->getOutput(  tm.getEntry($1->getVariable()), tm.getEntry($3->getVariable()) ) );
 			}
-			else{
+			else
 			   $$ = new ExpoExp($1,$3);
-			}
-	}
-	else {
-			 if(tm.getCurrentScope() == 0){
-			   std::cout << "pyt> " << tm.getEntry($1->getVariable())->getNumber() << std::endl;
-			  a = new ExpoExp(
-								  tm.getEntry($1->getVariable()),
-								  $3
-								  );
-			  tm .addTable(  $1->getVariable(),
-											a->getOutput(  tm.getEntry($1->getVariable()),
-														   $3
-														)
-						);
-				}	  
-			  else{
-			      $$ = new ExpoExp($1,$3);
-			  }
-	}
+	    }
+	    else {
+			if(tm.getCurrentScope() == 0){
+			    a = new ExpoExp( tm.getEntry($1->getVariable()), $3 );
+			    tm .addTable(  $1->getVariable(), a->getOutput(  tm.getEntry($1->getVariable()),$3));
+			}	  
+			else
+			    $$ = new ExpoExp($1,$3);
+	    }
     }
 	|testlist DOUBLESLASHEQUAL pick_yield_expr_testlist { 
-	  Ast* a;
-	  if($3->getNodetype() == 'V'){
-			   if(tm.getCurrentScope() == 0){
-			   
-			   a = new DoubleSlashExp(
-								   tm.getEntry($1->getVariable()),
-								   tm.getEntry($3->getVariable())
-								   );
-			 tm .addTable(   $1->getVariable(),
-											a->getOutput(  tm.getEntry($1->getVariable()),
-														   tm.getEntry($3->getVariable())
-														)
-										);
+	    Ast* a;
+	    if($3->getNodetype() == 'V'){
+			if(tm.getCurrentScope() == 0){
+			    a = new DoubleSlashExp( tm.getEntry($1->getVariable()), tm.getEntry($3->getVariable()) );
+			    tm .addTable(  $1->getVariable(), a->getOutput(  tm.getEntry($1->getVariable()), tm.getEntry($3->getVariable()) ) );
 			}
-			else{
-			   $$ = new DoubleSlashExp($1,$3);
-			}
-	}
-	else {
-			 if(tm.getCurrentScope() == 0){
-			   std::cout << "pyt> " << tm.getEntry($1->getVariable())->getNumber() << std::endl;
-			  a = new DoubleSlashExp(
-								  tm.getEntry($1->getVariable()),
-								  $3
-								  );
-			  tm .addTable(  $1->getVariable(),
-											a->getOutput(  tm.getEntry($1->getVariable()),
-														   $3
-														)
-						);
-				}	  
-			  else{
-			      $$ = new DoubleSlashExp($1,$3);
-			  }
-	}
+			else
+			    $$ = new DoubleSlashExp($1,$3);
+	    }
+	    else {
+			if(tm.getCurrentScope() == 0){
+			    a = new DoubleSlashExp( tm.getEntry($1->getVariable()), $3 );
+			    tm .addTable(  $1->getVariable(), a->getOutput(  tm.getEntry($1->getVariable()), $3 ) );
+		    }	  
+			else
+			    $$ = new DoubleSlashExp($1,$3);
+	        }
     }
-	| testlist star_EQUAL {  
-	   
-	   if(tm.getCurrentScope() > 0){
+	| testlist star_EQUAL {     
+	    if(tm.getCurrentScope() > 0){
 	        Ast* a = new AssignNode($1,$2);
 	        $$ = a;
-	   }
-	   else {
-	   tm.addTable($1->getVariable(),$2);
-	   //tm.display();
-	   } 
+	    }
+	    else
+	        tm.addTable($1->getVariable(),$2);
 	}
 	;
 pick_yield_expr_testlist // Used in: expr_stmt, star_EQUAL
@@ -441,58 +312,51 @@ pick_yield_expr_testlist // Used in: expr_stmt, star_EQUAL
 	;
 star_EQUAL // Used in: expr_stmt, star_EQUAL
 	: EQUAL pick_yield_expr_testlist star_EQUAL { $$= $2; }
-	| %empty                                    { $$ = 0; }
+	| %empty                                    { $$ = new VoidNode(1); }
 	;
 
 print_stmt // Used in: small_stmt
 	: PRINT opt_test {
-         if(tm.getCurrentScope() == 0)	{
-			 $$ = new PrintNode($2);
-			 if($2->getNodetype() == 'V'){
-				  if(tm.checkName($2->getVariable(),tm.getCurrentScope()) ){
-					  if((tm.getEntry($2->getVariable()))->getNodetype() == 'F'){
-							std::cout << std::fixed << std::setprecision(3) << "= " 
-																<< (tm.getEntry($2->getVariable()))->getNumber();
-																
-					   }
-					  else {
-							std::cout << "pyt> " 
-										  << (TableManager::getInstance().getEntry($2->getVariable()))->getNumber()  << std::endl;
-					   }
-					
-				  }
-				  else  { 
-						  std::cout << "symbol not initialized" << std::endl;
-				  }
-			 }
-			 else {
-				   if(eval($2)->getNodetype() == 'F')
-						  std::cout << std::fixed << std::setprecision(3) << "= " << (eval($2)->getNumber()) << std::endl; 
-				   else
-						  std::cout << "= " << (eval($2)->getNumber()) << std::endl; 
+        if(tm.getCurrentScope() == 0)	{
+			$$ = new PrintNode($2);
+			if($2->getNodetype() == 'V'){
+				if(tm.checkName($2->getVariable(),tm.getCurrentScope()) ){
+					if((tm.getEntry($2->getVariable()))->getNodetype() == 'F')
+					    std::cout << std::fixed << std::setprecision(3) << "pyt> " 
+												<< (tm.getEntry($2->getVariable()))->getNumber() << std::endl;
+					else 
+						std::cout << "pyt> " 
+								  << (TableManager::getInstance().getEntry($2->getVariable()))->getNumber()  << std::endl;
+				}
+				else
+					std::cout << "symbol not initialized" << std::endl;
+			}
+			else {
+				if(eval($2)->getNodetype() == 'F')
+				    std::cout << std::fixed << std::setprecision(3) << "pyt> " << (eval($2)->getNumber()) << std::endl; 
+				else
+				    std::cout << "pyt> " << (eval($2)->getNumber()) << std::endl; 
 			}
 		}
 		else 
-		   $$ = new PrintNode($2);
-		
+		    $$ = new PrintNode($2);
 	    //treeFree($2);
-	    //SymbolTable::getInstance().display(); 
 	}
-	| PRINT RIGHTSHIFT test opt_test_2 {$$=$3;} 
+	| PRINT RIGHTSHIFT test opt_test_2 { $$ = $3; } 
 	;
 opt_test // Used in: print_stmt
 	: test star_COMMA_test  { $$ = $1; }
-	| %empty     { $$ = 0; }     
+	| %empty     { $$ = new VoidNode(1); }     
 	;
 opt_test_2 // Used in: print_stmt
 	: plus_COMMA_test { $$ = 0; }
-	| %empty { $$ = 0; }
+	| %empty { $$ = new VoidNode(1); }
 	;
 del_stmt // Used in: small_stmt
-	: DEL exprlist {$$=$2;}
+	: DEL exprlist { $$ = $2; }
 	;
 pass_stmt // Used in: small_stmt
-	: PASS {$$=0;}
+	: PASS { $$ = 0; }
 	;
 flow_stmt // Used in: small_stmt
 	: break_stmt
@@ -502,21 +366,21 @@ flow_stmt // Used in: small_stmt
 	| yield_stmt
 	;
 break_stmt // Used in: flow_stmt
-	: BREAK {$$=0;}
+	: BREAK { $$ = 0; }
 	;
 continue_stmt // Used in: flow_stmt
-	: CONTINUE { $$ =0; }
+	: CONTINUE { $$ = 0; }
 	;
 return_stmt // Used in: flow_stmt
 	: RETURN testlist { $$ = new ReturnNode($2); }
-	| RETURN          { $$ =0; }
+	| RETURN          { $$ = 0; }
 	;
 yield_stmt // Used in: flow_stmt
 	: yield_expr
 	;
 raise_stmt // Used in: flow_stmt
-	: RAISE test opt_test_3 {$$=$2;}
-	| RAISE {$$=0;}
+	: RAISE test opt_test_3 { $$ = $2; }
+	| RAISE { $$ = 0; }
 	;
 opt_COMMA_test // Used in: opt_test_3, exec_stmt
 	: COMMA test
@@ -527,8 +391,8 @@ opt_test_3 // Used in: raise_stmt
 	| %empty
 	;
 import_stmt // Used in: small_stmt
-	: import_name {$$=0;}
-	| import_from {$$=0;}
+	: import_name { $$ = 0; }
+	| import_from { $$ = 0; } 
 	;
 import_name // Used in: import_stmt
 	: IMPORT dotted_as_names
@@ -571,15 +435,15 @@ dotted_name // Used in: decorator, import_from, dotted_as_name, dotted_name
 	;
 global_stmt // Used in: small_stmt, global_stmt
 	: global_stmt COMMA NAME
-	| GLOBAL NAME {$$=0;}
+	| GLOBAL NAME { $$ = new GlobalNode($2); }
 	;
 exec_stmt // Used in: small_stmt
-	: EXEC expr IN test opt_COMMA_test {$$=$2;}
-	| EXEC expr {$$=$2;}
+	: EXEC expr IN test opt_COMMA_test { $$ = $2; }
+	| EXEC expr { $$ = $2; }
 	;
 assert_stmt // Used in: small_stmt
-	: ASSERT test COMMA test {$$=$2;}
-	| ASSERT test {$$=$2;}
+	: ASSERT test COMMA test { $$ = $2; }
+	| ASSERT test { $$ = $2; }
 	;
 compound_stmt // Used in: single_input, stmt
 	: if_stmt
@@ -592,24 +456,24 @@ compound_stmt // Used in: single_input, stmt
 	| decorated
 	;
 if_stmt // Used in: compound_stmt
-	: IF test COLON suite star_ELIF ELSE COLON suite {$$ = $8;}
-	| IF test COLON suite star_ELIF {$$=$4;}
+	: IF test COLON suite star_ELIF ELSE COLON suite { $$ = $8; }
+	| IF test COLON suite star_ELIF { $$ = $4; }
 	;
 star_ELIF // Used in: if_stmt, star_ELIF
 	: ELIF test COLON suite star_ELIF
 	| %empty
 	;
 while_stmt // Used in: compound_stmt
-	: WHILE test COLON suite ELSE COLON suite {$$= $7;}
-	| WHILE test COLON suite { $$ = $4;}
+	: WHILE test COLON suite ELSE COLON suite { $$ = $7; }
+	| WHILE test COLON suite { $$ = $4; }
 	;
 for_stmt // Used in: compound_stmt
-	: FOR exprlist IN testlist COLON suite ELSE COLON suite {$$=$6;}
-	| FOR exprlist IN testlist COLON suite {$$ =$6;}
+	: FOR exprlist IN testlist COLON suite ELSE COLON suite { $$ = $6; }
+	| FOR exprlist IN testlist COLON suite { $$ = $6; }
 	;
 try_stmt // Used in: compound_stmt
-	: TRY COLON suite plus_except opt_ELSE opt_FINALLY {$$= $3;}
-	| TRY COLON suite FINALLY COLON suite {$$=$3;}
+	: TRY COLON suite plus_except opt_ELSE opt_FINALLY { $$ = $3; }
+	| TRY COLON suite FINALLY COLON suite { $$ = $3; }
 	;
 plus_except // Used in: try_stmt, plus_except
 	: except_clause COLON suite plus_except
@@ -624,7 +488,7 @@ opt_FINALLY // Used in: try_stmt
 	| %empty
 	;
 with_stmt // Used in: compound_stmt
-	: WITH with_item star_COMMA_with_item COLON suite {$$=$5;}
+	: WITH with_item star_COMMA_with_item COLON suite { $$ = $5; }
 	;
 star_COMMA_with_item // Used in: with_stmt, star_COMMA_with_item
 	: COMMA with_item star_COMMA_with_item
@@ -649,11 +513,9 @@ opt_AS_COMMA // Used in: except_clause
 suite // Used in: funcdef, if_stmt, star_ELIF, while_stmt, for_stmt, 
       // try_stmt, plus_except, opt_ELSE, opt_FINALLY, with_stmt, classdef
 	: simple_stmt { $$= $1; }
-	| NEWLINE INDENT  {tm.pushScope();} plus_stmt DEDENT{ 
-	     
-	      $$ = new SuiteNode(tm.getCurrentScope(), $4->rbegin(), $4->rend()); 
-	      tm.popScope();
-		    
+	| NEWLINE INDENT  { tm.pushScope(); } plus_stmt DEDENT{ 
+	    $$ = new SuiteNode( tm.getCurrentScope(), $4->rbegin(), $4->rend()); 
+	    tm.popScope();    
 	}
 	;
 plus_stmt // Used in: suite, plus_stmt
@@ -661,7 +523,6 @@ plus_stmt // Used in: suite, plus_stmt
 	    $$= $2; 
 		$$->push_back($1);
 	}
-		
 	| stmt{ 
 	    $$ = new std::vector<Ast*>();
 		$$->reserve(4);
@@ -688,18 +549,18 @@ test // Used in: opt_EQUAL_test, print_stmt, opt_test, raise_stmt,
      // testlist1, star_COMMA_test, star_test_COLON_test,
      // plus_COMMA_test, dictarg, listarg
 	: or_test opt_IF_ELSE {  $$ = $1; }
-	| lambdef  {$$=0;}
+	| lambdef  { $$ = 0; }
 	;
 opt_IF_ELSE // Used in: test
 	: IF or_test ELSE test
 	| %empty 
 	;
 or_test // Used in: old_test, test, opt_IF_ELSE, or_test, comp_for
-	: and_test {$$=$1;}
+	: and_test { $$ = $1; }
 	| or_test OR and_test 
 	;
 and_test // Used in: or_test, and_test
-	: not_test {$$ = $1;}
+	: not_test { $$ = $1;}
 	| and_test AND not_test 
 	;
 not_test // Used in: and_test, not_test
@@ -707,7 +568,7 @@ not_test // Used in: and_test, not_test
 	| comparison  
 	; 
 comparison // Used in: not_test, comparison
-	: expr  {$$ = $1;}
+	: expr  { $$ = $1; }
 	| comparison comp_op expr 
 	;
 comp_op // Used in: comparison
@@ -725,7 +586,7 @@ comp_op // Used in: comparison
 	;
 expr // Used in: exec_stmt, with_item, comparison, expr, 
      // exprlist, star_COMMA_expr
-	: xor_expr {$$ = $1;}
+	: xor_expr { $$ = $1; }
 	| expr BAR xor_expr 
 	;
 xor_expr // Used in: expr, xor_expr
@@ -733,11 +594,11 @@ xor_expr // Used in: expr, xor_expr
 	| xor_expr CIRCUMFLEX and_expr 
 	;
 and_expr // Used in: xor_expr, and_expr
-	: shift_expr {$$= $1;}
+	: shift_expr { $$ = $1; }
 	| and_expr AMPERSAND shift_expr 
 	;
 shift_expr // Used in: and_expr, shift_expr
-	: arith_expr {$$= $1;}
+	: arith_expr { $$ = $1; }
 	| shift_expr pick_LEFTSHIFT_RIGHTSHIFT arith_expr 
 	;
 pick_LEFTSHIFT_RIGHTSHIFT // Used in: shift_expr
@@ -748,10 +609,10 @@ arith_expr // Used in: shift_expr, arith_expr
 	: term  {  $$ = $1; }
     | arith_expr PLUS term  { 
 	    if($1->getNodetype() == 'V'){
-		 $1 = TableManager::getInstance().getEntry($1->getVariable());
+		    $1 = TableManager::getInstance().getEntry($1->getVariable());
 	    }  
 	    if($3->getNodetype() == 'V'){
-		 $3 = TableManager::getInstance().getEntry($3->getVariable());
+		    $3 = TableManager::getInstance().getEntry($3->getVariable());
 	    } 
 	    Ast* plus = new PlusExp($1,$3);
 	    $$ = plus->getOutput($1,$3);
@@ -766,7 +627,6 @@ arith_expr // Used in: shift_expr, arith_expr
 	    } 
 	    Ast* minus = new MinusExp($1,$3);
 	    $$ = minus->getOutput($1,$3);
-		
 	}
 	;
 term // Used in: arith_expr, term
@@ -777,59 +637,57 @@ term // Used in: arith_expr, term
 	    } 
 	    if($3->getNodetype() == 'V'){
 	      $3 = TableManager::getInstance().getEntry($3->getVariable());
-            }
+        }
 	    Ast* mult = new MultExp($1,$3);
 	    $$ = mult->getOutput($1,$3);
 	}
-        | term SLASH factor {
-		
+    | term SLASH factor {
 	    if($1->getNodetype() == 'V'){
 		   $1 = TableManager::getInstance().getEntry($1->getVariable());
 	    }  
 	    if($3->getNodetype() == 'V'){
-		  $3 = TableManager::getInstance().getEntry($3->getVariable());
+		    $3 = TableManager::getInstance().getEntry($3->getVariable());
 	    }
 	    if($3->getNumber() == 0){
-		  std::cout << "DivisionByZeroError" << std::endl;
-		  $$ = new IntNumber('I',0);
+		    std::cout << "DivisionByZeroError" << std::endl;
+		    $$ = new IntNumber('I',0);
 	    }
-            else{		
-		Ast* div = new DivExp($1,$3);
-		$$ = div->getOutput($1,$3); 
-            }		
+        else{		
+		    Ast* div = new DivExp($1,$3);
+		    $$ = div->getOutput($1,$3); 
+        }		
 	} 
-        | term PERCENT factor {
-		
+    | term PERCENT factor {
 	    if($1->getNodetype() == 'V'){
-		   $1 = TableManager::getInstance().getEntry($1->getVariable());
+		    $1 = TableManager::getInstance().getEntry($1->getVariable());
 	    } 
 	    if($3->getNodetype() == 'V'){
-		   $3 = TableManager::getInstance().getEntry($3->getVariable());
+		    $3 = TableManager::getInstance().getEntry($3->getVariable());
 	    }
 	    if($3->getNumber() == 0){
-		  std::cout << "DivisionByZeroError" << std::endl;
-		  $$ = new IntNumber('I',0);
-            }
+		    std::cout << "DivisionByZeroError" << std::endl;
+		    $$ = new IntNumber('I',0);
+        }
 	    else {
-		Ast* percent = new ModExp($1,$3);
-		$$ = percent->getOutput($1,$3);
+		    Ast* percent = new ModExp($1,$3);
+		    $$ = percent->getOutput($1,$3);
 	    }
 	}
-        | term DOUBLESLASH factor{     
+    | term DOUBLESLASH factor{     
 	    if($1->getNodetype() == 'V'){
-		   $1 = TableManager::getInstance().getEntry($1->getVariable());
+		    $1 = TableManager::getInstance().getEntry($1->getVariable());
 	    } 
 	    if($3->getNodetype() == 'V'){
-		   $3 = TableManager::getInstance().getEntry($3->getVariable());
-            }
+		    $3 = TableManager::getInstance().getEntry($3->getVariable());
+        }
 	    if($3->getNumber() == 0){
-		   std::cout << "DivisionByZeroError" << std::endl;
+		    std::cout << "DivisionByZeroError" << std::endl;
 		    $$ = new IntNumber('I',0);
 	    }	
 	    else {
-		Ast* dslash = new DoubleSlashExp($1,$3);
-		$$ = dslash->getOutput($1,$3);
-            }	
+		    Ast* dslash = new DoubleSlashExp($1,$3);
+		    $$ = dslash->getOutput($1,$3);
+        }	
 	}
 	;	
 factor // Used in: term, factor, power
@@ -847,29 +705,27 @@ factor // Used in: term, factor, power
 power // Used in: factor
 	: atom star_trailer DOUBLESTAR factor    { 
 	    if($1->getNodetype() == 'V'){
-	       $1 = TableManager::getInstance().getEntry($1->getVariable());
+	        $1 = TableManager::getInstance().getEntry($1->getVariable());
 	    } 
 	    if($4->getNodetype() == 'V'){
-	      $4 = TableManager::getInstance().getEntry($4->getVariable());
+	        $4 = TableManager::getInstance().getEntry($4->getVariable());
 	    }
 	    Ast* expo = new ExpoExp($1,$4);
 	    $$ = expo->getOutput($1,$4);     
 	}
 	| atom star_trailer {   
 	    if($2) {
-	   //     tm.display();
-	        
 		    $$ = new CallNode();
 		    $$->eval($1);
 		    $$=$1;
 		}
 		else
-            $$ = $1;		
+            $$ = $1;
 	} 
 	;
 star_trailer // Used in: power, star_trailer
-	: trailer star_trailer { $$ = new VoidNode(1);}
-	| %empty {$$=0;}
+	: trailer star_trailer { $$ = new VoidNode(1); }
+	| %empty { $$ = new  VoidNode(1); }
 	;
 atom // Used in: power
 	: LPAR opt_yield_test RPAR { $$ = $2; }            
@@ -890,31 +746,31 @@ pick_yield_expr_testlist_comp // Used in: opt_yield_test
 	;
 opt_yield_test // Used in: atom
 	: pick_yield_expr_testlist_comp { $$ = $1; }
-	| %empty { $$ = 0; }
+	| %empty { $$ = new VoidNode(1); }
 	;
 opt_listmaker // Used in: atom
 	: listmaker { $$ = $1;}
-	| %empty { $$ = 0; }
+	| %empty { $$ = new VoidNode(1); }
 	;
 opt_dictorsetmaker // Used in: atom
 	: dictorsetmaker {$$ = $1;}
-	| %empty { $$ = 0; }
+	| %empty { $$ = new VoidNode(1); }
 	;
 plus_STRING // Used in: atom, plus_STRING
 	: STRING plus_STRING
 	| STRING
 	;
 listmaker // Used in: opt_listmaker
-	: test list_for { $$ = $1;}
-	| test star_COMMA_test { $$ = $1;}
+	: test list_for { $$ = $1; }
+	| test star_COMMA_test { $$ = $1; }
 	;
 testlist_comp // Used in: pick_yield_expr_testlist_comp
 	: test comp_for { $$ = $1; }
 	| test star_COMMA_test { $$ = $1; }
 	;
 lambdef // Used in: test
-	: LAMBDA varargslist COLON test {$$=0;}
-	| LAMBDA COLON test            {$$=0;}
+	: LAMBDA varargslist COLON test { $$ = 0; }
+	| LAMBDA COLON test            { $$ = 0; }
 	;
 trailer // Used in: star_trailer
 	: LPAR opt_arglist RPAR 
@@ -946,27 +802,27 @@ exprlist // Used in: del_stmt, for_stmt, list_for, comp_for
 	;
 testlist // Used in: expr_stmt, pick_yield_expr_testlist, 
          // return_stmt, for_stmt, opt_testlist, yield_expr
-	: test star_COMMA_test {$$ = $1; }
+	: test star_COMMA_test { $$ = $1; }
 	;
 dictorsetmaker // Used in: opt_dictorsetmaker
 	: test COLON test pick_comp_for {$$ = $1;}
-	| test pick_for_test {$$=$1;}
+	| test pick_for_test { $$ = $1; }
 	;
 pick_comp_for // Used in: dictorsetmaker
 	: comp_for {$$=0;}
-	| star_test_COLON_test {$$=0;}
+	| star_test_COLON_test { $$ = 0; }
 	;
 pick_for_test // Used in: dictorsetmaker
-	: comp_for {$$=0;}
-	| star_COMMA_test{$$=0;} 
+	: comp_for { $$ = 0; }
+	| star_COMMA_test{ $$ = 0; } 
 	;
 classdef // Used in: decorated, compound_stmt
-	: CLASS NAME LPAR opt_testlist RPAR COLON suite {$$= $7;}
-	| CLASS NAME COLON suite {$$=$4;}
+	: CLASS NAME LPAR opt_testlist RPAR COLON suite { $$ = $7; }
+	| CLASS NAME COLON suite { $$ = $4; }
 	;
 opt_testlist // Used in: classdef
 	: testlist {$$=$1;}
-	| %empty {$$=0;}
+	| %empty { $$ = 0; }
 	;
 arglist // Used in: opt_arglist, arglist
 	: argument COMMA arglist
@@ -1018,8 +874,8 @@ encoding_decl // Used in: start
 	;
 yield_expr // Used in: pick_yield_expr_testlist, yield_stmt, 
            // pick_yield_expr_testlist_comp
-	: YIELD testlist {$$=$2;}
-	| YIELD {$$=0;}
+	: YIELD testlist { $$ = $2; }
+	| YIELD { $$ = 0; }
 	;
 star_fpdef_notest // Used in: fplist, star_fpdef_notest
 	: COMMA fpdef star_fpdef_notest

@@ -162,4 +162,13 @@ public:
   VoidNode(int n);
 
 };
+
+class GlobalNode : public Ast{
+public:
+  GlobalNode(const char* variable_name);
+  std::string& getVariable();
+private: 
+  std::string identifier;
+};
+
 #endif

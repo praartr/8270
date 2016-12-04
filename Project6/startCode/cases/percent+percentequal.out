@@ -1,8 +1,7 @@
->>> = 0
->>> = 14
->>> DivisionByZeroError
-= 0
->>> >>> DivisionByZeroError
-= 5.500
->>> >>> >>> = 0.750
->>> 
+pyt> 0
+pyt> 14
+DivisionByZeroError
+pyt> 0
+DivisionByZeroError
+pyt> 5.500
+pyt> 0.750

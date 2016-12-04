@@ -1,5 +1,4 @@
->>> = 0
->>> = 6
->>> DivisionByZeroError
-= 0
->>> 
+pyt> 0
+pyt> 6
+DivisionByZeroError
+pyt> 0
