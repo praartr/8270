@@ -18,6 +18,9 @@ bool TableManager::checkName(std::string& name, int scope){
     }
 	else return false;
 }
+/*void TableManager::setScope(int scope) {
+	currentScope = scope;
+}*/
 void TableManager::pushScope() {
 	++currentScope;
 }
@@ -48,3 +51,6 @@ Ast* TableManager::getEntry(std::string& name){
 	}
 	return NULL;
 }
+/*void TableManager::erase(std::string& s){
+	tables[currentScope]->erase(s);
+}*/

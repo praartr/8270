@@ -39,3 +39,8 @@ void SymbolTable::display(){
 Ast* SymbolTable::retrieveValue(std::string& s){
 	  return table[s];
 }
+/*void SymbolTable::erase(std::string& s){
+	std::map<std::string, Ast*>::iterator iter = table.find(s);
+	if( iter != table.end() )
+	   iter = table.erase(iter);
+}*/

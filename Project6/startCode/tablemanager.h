@@ -15,10 +15,12 @@ public:
   void addTable(std::string& s, Ast* number);
   void pushScope();
   void popScope();
+  //void setScope(int scope);
   int getCurrentScope() { return currentScope;}
-  void addFuncName(std::string& s);
+  
   int getVecSize() { return tables.size(); }
   void display();
+ // void erase(std::string& s);
 private:
   TableManager();
   int currentScope;

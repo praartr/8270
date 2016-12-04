@@ -59,25 +59,24 @@ void yyerror (char const *);
 start
 	: file_input  
 	| encoding_decl
-        ;  
-/*	| single_input  
+	| single_input  
 	;
-single_input // Used in: start
-	: NEWLINE 
-	| simple_stmt
-	| compound_stmt NEWLINE
-	;
+//single_input // Used in: start
+//	: NEWLINE 
+//	| simple_stmt
+//	| compound_stmt NEWLINE
+//	;
 
 single_input // Used in: start
-	: NEWLINE 
+	: NEWLINE
 	| stmt 
-*/	;
+	;
 file_input // Used in: start
 	: star_NEWLINE_stmt ENDMARKER 
 	;
 pick_NEWLINE_stmt // Used in: star_NEWLINE_stmt
 	: NEWLINE { $$ = 0;  }
-	| stmt    { $$ = $1; }
+	| stmt    { }
 	;
 star_NEWLINE_stmt // Used in: file_input, star_NEWLINE_stmt
 	: pick_NEWLINE_stmt star_NEWLINE_stmt
@@ -312,7 +311,7 @@ pick_yield_expr_testlist // Used in: expr_stmt, star_EQUAL
 	;
 star_EQUAL // Used in: expr_stmt, star_EQUAL
 	: EQUAL pick_yield_expr_testlist star_EQUAL { $$= $2; }
-	| %empty                                    { $$ = new VoidNode(1); }
+	| %empty                                    { $$ = 0; }
 	;
 
 print_stmt // Used in: small_stmt
@@ -326,7 +325,7 @@ print_stmt // Used in: small_stmt
 												<< (tm.getEntry($2->getVariable()))->getNumber() << std::endl;
 					else 
 						std::cout << "pyt> " 
-								  << (TableManager::getInstance().getEntry($2->getVariable()))->getNumber()  << std::endl;
+								  << (tm.getEntry($2->getVariable()))->getNumber()  << std::endl;
 				}
 				else
 					std::cout << "symbol not initialized" << std::endl;
@@ -346,11 +345,11 @@ print_stmt // Used in: small_stmt
 	;
 opt_test // Used in: print_stmt
 	: test star_COMMA_test  { $$ = $1; }
-	| %empty     { $$ = new VoidNode(1); }     
+	| %empty     { $$ = 0; }     
 	;
 opt_test_2 // Used in: print_stmt
 	: plus_COMMA_test { $$ = 0; }
-	| %empty { $$ = new VoidNode(1); }
+	| %empty { $$ = 0; }
 	;
 del_stmt // Used in: small_stmt
 	: DEL exprlist { $$ = $2; }
@@ -435,7 +434,7 @@ dotted_name // Used in: decorator, import_from, dotted_as_name, dotted_name
 	;
 global_stmt // Used in: small_stmt, global_stmt
 	: global_stmt COMMA NAME
-	| GLOBAL NAME { $$ = new GlobalNode($2); }
+	| GLOBAL NAME { $$ = 0; }
 	;
 exec_stmt // Used in: small_stmt
 	: EXEC expr IN test opt_COMMA_test { $$ = $2; }
@@ -725,7 +724,7 @@ power // Used in: factor
 	;
 star_trailer // Used in: power, star_trailer
 	: trailer star_trailer { $$ = new VoidNode(1); }
-	| %empty { $$ = new  VoidNode(1); }
+	| %empty { $$ = 0;}
 	;
 atom // Used in: power
 	: LPAR opt_yield_test RPAR { $$ = $2; }            
@@ -746,15 +745,15 @@ pick_yield_expr_testlist_comp // Used in: opt_yield_test
 	;
 opt_yield_test // Used in: atom
 	: pick_yield_expr_testlist_comp { $$ = $1; }
-	| %empty { $$ = new VoidNode(1); }
+	| %empty { $$ = 0; }
 	;
 opt_listmaker // Used in: atom
 	: listmaker { $$ = $1;}
-	| %empty { $$ = new VoidNode(1); }
+	| %empty { $$ = 0; }
 	;
 opt_dictorsetmaker // Used in: atom
 	: dictorsetmaker {$$ = $1;}
-	| %empty { $$ = new VoidNode(1); }
+	| %empty { $$ = 0;}
 	;
 plus_STRING // Used in: atom, plus_STRING
 	: STRING plus_STRING

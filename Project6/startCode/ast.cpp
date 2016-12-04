@@ -32,12 +32,12 @@ Variable::Variable(const char nodetype, const char* variable_name)
 std::string& Variable::getVariable(){
 	return identifier;
 }
-GlobalNode::GlobalNode(const char* variable_name) 
+/*GlobalNode::GlobalNode(const char* variable_name) 
     : Ast('G',NULL,NULL), identifier(variable_name) {}
 
 std::string& GlobalNode::getVariable(){
 	return identifier;
-}
+}*/
 IntNumber::IntNumber(const char nodetype, const int n) 
     : AstNumber(nodetype), number(n) {}
 
@@ -257,13 +257,24 @@ void SuiteNode::execute() {
 	     if((*ptr)->getOutput(NULL,NULL)->getNodetype() == 'V'){
 		    std::cout << "pyt> " << tm.getEntry((*ptr)->getOutput(NULL,NULL)->getVariable())->getNumber() << std::endl;
 		 }
+		 if((*ptr)->getOutput(NULL,NULL)->getNodetype() == 'I' || (*ptr)->getOutput(NULL,NULL)->getNodetype() == 'F'){
+		    std::cout << "pyt> " << (*ptr)->getOutput(NULL,NULL)->getNumber() << std::endl;
+		 }
 	 }
 	  if( (*ptr)->getNodetype() == '+' || (*ptr)->getNodetype() == '-' || (*ptr)->getNodetype() == '*' || (*ptr)->getNodetype() == '/'
 	                                   || (*ptr)->getNodetype() == '|'|| (*ptr)->getNodetype() == '%'|| (*ptr)->getNodetype() == '^' ){
 		 tm.addTable((*ptr)->getLeft()->getVariable(),(*ptr)->getOutput(tm.getEntry((*ptr)->getLeft()->getVariable()), (*ptr)->getRight()));
       }
-    /*  if( (*ptr)->getNodetype() == 'G'){
-           tm.getEntry((*ptr)->getOutput(NULL,NULL)->getVariable())
+     /* if( (*ptr)->getNodetype() == 'G'){
+		   
+            Ast* value = tm.getEntry((*ptr)->getOutput(NULL,NULL)->getVariable());
+            int oldScope = tm.getCurrentScope();
+            tm.setScope(0);
+            tm.addTable((*ptr)->getOutput(NULL,NULL)->getVariable(), value);
+            tm.setScope(oldScope);
+            tm.erase((*ptr)->getOutput(NULL,NULL)->getVariable());
+           
+           
 	  }*/
 	 ++ptr;
 	}
