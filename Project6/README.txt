@@ -10,7 +10,7 @@ Project due date: Dec 5, 2016
 
 Project description: Final Project : Python Functions & Scope
 
-Extra Contribution : Implemented additional forms of assignemnt x+=y, x-= y, x*= y, x/= y, x//= y, x%=y.
+Extra Contribution : Implemented (i)Basic Scope and (ii) Return Statement
 
 Note: For floating point results, the precision is set to 3. ( 3 digits after the decimal point ) 
 
