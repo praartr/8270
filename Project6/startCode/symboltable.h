@@ -1,18 +1,17 @@
-#pragma once
-//#ifndef SYMBOLTABLE_H
-//#define SYMBOLTABLE_H
 #include <string>
 #include <map>
 #include "ast.h"
+class Ast;
 class SymbolTable {
 
 public:
    SymbolTable();
+   SymbolTable(std::string&, Ast*);
    void insert(std::string&, Ast*);
    int isPresent(std::string&);
    void display();
    Ast* retrieveValue(std::string&);
+   
 private:
    std::map<std::string,Ast*> table; 	
 };
-//#endif

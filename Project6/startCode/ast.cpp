@@ -3,7 +3,7 @@
 #  include <iostream>
 #  include <stdlib.h>
 #  include "ast.h"
-//#  include "tablemanager.h"
+#  include "tablemanager.h"
 #  include <math.h>
 #  include <cstring>
 Ast* eval(Ast *a) {
@@ -45,6 +45,9 @@ FloatNumber::FloatNumber(const char nodetype, const double n)
 	
 double FloatNumber::getNumber() const { return number; }
 
+
+AssignNode::AssignNode(Ast* left,Ast* right) 
+    : Ast('=',left,right) {}
 PlusExp::PlusExp(Ast* left,Ast* right) 
     : Ast('+',left,right) {}
 	
@@ -195,22 +198,37 @@ void treeFree(Ast *a) {
   }
 }
 
-PrintNode::PrintNode(Ast* node): Ast('P',NULL,NULL), expr(node){
+PrintNode::PrintNode(Ast* node): Ast('P',node,NULL), left(node){
 	
 }
-ReturnNode::ReturnNode(Ast* e): Ast('R',NULL,NULL),expr(e){
+Ast* PrintNode::getOutput(const Ast* x, const Ast* y) const { 	
+	return left;
+}
+ReturnNode::ReturnNode(Ast* node): Ast('R',NULL,NULL),left(node){
 	
 }
-CallNode::CallNode(Ast* n) : Ast('C',NULL,NULL), node(n){
+Ast* ReturnNode::getOutput(const Ast* x, const Ast* y) const { 	
+	return left;	
+}
+CallNode::CallNode() : Ast('C',NULL,NULL){
+}
+void CallNode::eval(Ast* node){
+	//std::cout << "inside callnode execute " << std::endl;
+	TableManager tm = TableManager::getInstance();
+	Ast* funcnode = tm.getEntry(node->getVariable());
+	funcnode->execute();
+}
+
+
+FuncNode::FuncNode(const std::string& name,Ast* stmt):  Ast('F',NULL,NULL),func_name(name), suite(stmt){
 	
 }
-void CallNode::eval(){
-	//TableManager tm = TableManager::getInstance();
-	//if(!tm.checkName(node->getVariable())) std::cout <<"not found" << std::endl;
+
+void FuncNode::execute() { 
+	//std::cout << "inside funcnode execute " << std::endl;
+	suite->execute();	
 }
-FuncNode::FuncNode(const std::string& name, Ast* stmt):  Ast('F',NULL,NULL),func_name(name), suite(stmt){
-}
-SuiteNode::SuiteNode(std::vector<Ast*>::reverse_iterator first, std::vector<Ast*>::reverse_iterator end) : Ast('S',NULL,NULL), stmts() {
+SuiteNode::SuiteNode(int currentScope, std::vector<Ast*>::reverse_iterator first, std::vector<Ast*>::reverse_iterator end) : Ast('S',NULL,NULL), FuncScope(currentScope), stmts() {
 	stmts.reserve(4);
 	std::vector<Ast*>::reverse_iterator ptr = first;
 	while(ptr != end){
@@ -219,4 +237,27 @@ SuiteNode::SuiteNode(std::vector<Ast*>::reverse_iterator first, std::vector<Ast*
 	}
 	
 }
-
+void SuiteNode::execute() { 
+	
+	//std::cout << "inside suitenode execute " << std::endl;
+	TableManager tm = TableManager::getInstance();
+	tm.pushScope();
+	std::vector<Ast*>::iterator ptr = stmts.begin();
+	while(ptr != stmts.end()){
+		
+     if( (*ptr)->getNodetype() == '='){
+	     tm.addTable((*ptr)->getLeft()->getVariable(), (*ptr)->getRight());
+	 }
+	 if( (*ptr)->getNodetype() == 'P' || (*ptr)->getNodetype() == 'R' ){
+	     if((*ptr)->getOutput(NULL,NULL)->getNodetype() == 'V'){
+		    std::cout << "pyt> " << tm.getEntry((*ptr)->getOutput(NULL,NULL)->getVariable())->getNumber() << std::endl;
+		 }
+	 }
+	  if( (*ptr)->getNodetype() == '+' || (*ptr)->getNodetype() == '-' ){
+		 tm.addTable((*ptr)->getLeft()->getVariable(),(*ptr)->getOutput(tm.getEntry((*ptr)->getLeft()->getVariable()), (*ptr)->getRight()));
+      }
+	 ++ptr;
+	}
+tm.popScope();	
+}
+VoidNode::VoidNode(int i) : Ast('V',NULL,NULL){}

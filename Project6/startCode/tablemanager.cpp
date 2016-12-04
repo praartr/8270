@@ -1,38 +1,50 @@
 #include "tablemanager.h"
-//#include "symboltable.h"
-//#include "ast.h"
-/*TableManager::TableManager() : currentScope(0), tables(){
-	tables.reserve(4);
-}*/
-void TableManager::addTable(SymbolTable& s){
-	tables[currentScope] = s;
-	
+#include "ast.h"
+TableManager::TableManager() : currentScope(0), tables(){
+	tables.reserve(10);
+	tables.push_back(new SymbolTable());
 }
-bool TableManager::checkName(std::string& name){
-	SymbolTable s = tables[currentScope];
-	s.isPresent(name);
-	if(/*tables[currentScope].isPresent(name)*/s.isPresent(name)) return true;
+void TableManager::addTable(std::string& s, Ast* number){
+	    if(tables[currentScope])
+	      tables[currentScope]->insert(s,number);
+	    else
+          tables.insert(tables.begin()+currentScope, new SymbolTable(s, number));
+}
+
+bool TableManager::checkName(std::string& name, int scope){
+	if(tables[scope]->isPresent(name)){
+		// std::cout << "inside returning true" << std::endl; 
+		 return true;
+    }
 	else return false;
 }
 void TableManager::pushScope() {
-	currentScope++;
+	++currentScope;
 }
 void TableManager::popScope() {
-	currentScope--;
+	--currentScope;
 }
 TableManager& TableManager::getInstance() {
     static TableManager instance;
 	return instance;
 }
-
+void TableManager::display(){
+	std::cout << tables.size() << std::endl;
+	for(unsigned int i=0;i<tables.size();i++)
+	         tables[i]->display();
+}
 Ast* TableManager::getEntry(std::string& name){
+	//std::cout << "inside getEntry" << std::endl;
 	int scope = currentScope;
-	while(currentScope>=0){
-		if(checkName(name)) return tables[currentScope].retrieveValue(name);
+	while(scope>=0){
+		//std::cout << "scope : " << scope  << std::endl;
+		if(checkName(name,scope)){
+			//std::cout <<"inside if" << std::endl;
+			return  tables[scope]->retrieveValue(name);
+			
+			}
 		else
-			currentScope--;
+			scope--;
 	}
-	
-	currentScope = scope;
 	return NULL;
 }

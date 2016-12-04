@@ -1,7 +1,11 @@
 #include <iostream>
 //#include "parse.tab.hpp"
 
-
+//extern FILE * yyin;
+//extern int keywords;
+//extern int identifiers;
+//extern int numbers;
+//extern int yydebug;
 extern int yylineno;
 
 int yylex(void);
@@ -31,7 +35,7 @@ int main(int argc, char * argv[]) {
     openFile(argv[1]);
   }*/
 // yydebug = 0;
-  std::cout << ">>> " ;
+
   int parseErrors = yyparse();
   if ( parseErrors ) {
     std::cerr << "Abnormal termination" << std::endl;
@@ -46,3 +50,4 @@ int oldMain() {
   printInfo();
   return 0;
 }
+

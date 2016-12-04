@@ -2,8 +2,8 @@
 //  From "flex & bison", fb3-1, by John Levine
 //  Adapted by Brian Malloy
 #pragma once
-//#ifndef AST_H
-//#define AST_H
+#ifndef AST_H
+#define AST_H
 #include <string>
 #include <fstream>
 #include <math.h>
@@ -23,10 +23,13 @@ public:
   virtual double getNumber() const { throw "No Number"; }
   virtual Ast* getOutput(const Ast* x, const Ast* y) const { throw "NO Output";}
   virtual std::string& getVariable(){ throw "no variable";}  
+  virtual void eval(Ast*){ throw "no eval func"; }
+  virtual void execute(){ throw "no exec"; }
 private:
   char nodetype;
    Ast* left;
    Ast* right;
+   
 };
 
 
@@ -109,16 +112,21 @@ public:
 private:
   Ast* l;
 };
+class AssignNode : public Ast {
+public:
+   AssignNode(Ast* left, Ast* right);
+};
 class PrintNode : public Ast {
 public:
   PrintNode(Ast*);
+  virtual Ast* getOutput(const Ast*x=0, const Ast* y=0)const;
 private:
-  Ast* expr;
+  Ast* left;
 };
 class FuncNode : public Ast {
 public:
-   FuncNode(const std::string&, Ast*);
-   //virtual ~FuncNode();
+   FuncNode(const std::string&,Ast*);
+   void execute();
 private:
     const std::string func_name;
 	Ast* suite;
@@ -126,28 +134,32 @@ private:
 
 class CallNode : public Ast {
 public: 
-  CallNode(Ast*);
-  void eval();
-private:
-  Ast* node;
+  CallNode();
+  void eval(Ast*);
 	
 };
 class ReturnNode : public Ast {
 public:
    ReturnNode(Ast*);
-   
+   virtual Ast* getOutput(const Ast*x=0, const Ast* y=0)const;
 private:
-   Ast* expr;
+   Ast* left;
 };
 class SuiteNode : public Ast{
 public:
-  SuiteNode(std::vector<Ast*>::reverse_iterator first, std::vector<Ast*>::reverse_iterator end);
+  SuiteNode(int, std::vector<Ast*>::reverse_iterator first, std::vector<Ast*>::reverse_iterator end);
+  void execute();
 private:
+  int FuncScope;
   std::vector<Ast*> stmts;
 };
 Ast* eval(Ast*);   // Evaluate an AST
 void treeFree(Ast*); // delete and free an AST
 
 
+class VoidNode : public Ast{
+public:
+  VoidNode(int n);
 
-//#endif
+};
+#endif

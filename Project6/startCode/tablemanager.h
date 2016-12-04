@@ -1,25 +1,27 @@
-#pragma once
-//#ifndef TABLEMANAGER_H
-//#define TABLEMANAGER_H
+
+#ifndef TABLEMANAGER_H
+#define TABLEMANAGER_H
 #include <string>
 #include <vector>
-#include "ast.h"
 #include "symboltable.h"
 class TableManager {
 	
 public:
-  //TableManager();
+
   static TableManager& getInstance();
   Ast* getEntry(std::string& name);
    
-  bool checkName(std::string& name);
-  void addTable(SymbolTable&);
+  bool checkName(std::string&, int);
+  void addTable(std::string& s, Ast* number);
   void pushScope();
   void popScope();
   int getCurrentScope() { return currentScope;}
-  
+  void addFuncName(std::string& s);
+  int getVecSize() { return tables.size(); }
+  void display();
 private:
+  TableManager();
   int currentScope;
-  std::vector<SymbolTable> tables;	
+  std::vector<SymbolTable*> tables;	
 };
-//#endif	
+#endif	
