@@ -11,11 +11,15 @@ void TableManager::addTable(std::string& s, Ast* number){
         tables.insert(tables.begin()+currentScope, new SymbolTable(s, number));
 }
 
-bool TableManager::checkName(std::string& name, int scope){
-	if(tables[scope]->isPresent(name))
-		return true;
+bool TableManager::checkName(std::string& name, unsigned int scope){
+	if(!tables.empty() && scope < tables.size()){
+		if(tables[scope]->isPresent(name))
+			return true;
+		else 
+			return false;
+	}
 	else 
-	    return false;
+		return false;
 }
 void TableManager::setScope(int scope) {
 	currentScope = scope;
@@ -36,7 +40,7 @@ void TableManager::display(){
 	    tables[i]->display();
 }
 Ast* TableManager::getEntry(std::string& name){
-	int scope = currentScope;
+	unsigned int scope = currentScope;
 	while(scope>=0){
 		if(checkName(name,scope))
 			return  tables[scope]->retrieveValue(name);

@@ -11,7 +11,7 @@ public:
   static TableManager& getInstance();
   Ast* getEntry(std::string& name);
    
-  bool checkName(std::string&, int);
+  bool checkName(std::string&, unsigned int);
   void addTable(std::string& s, Ast* number);
   void pushScope();
   void popScope();

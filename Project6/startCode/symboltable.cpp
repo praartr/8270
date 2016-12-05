@@ -11,12 +11,15 @@ void SymbolTable::insert(std::string& s, Ast* number){
 	table[s]=number;
 }
 int SymbolTable::isPresent(std::string& s){
-	
-    std::map<std::string,Ast*>::iterator ptr = table.find(s);
-    if(ptr!=table.end())
-      return 1;
-    else 
-      return 0;
+	if(!table.empty()){
+		std::map<std::string,Ast*>::iterator ptr = table.find(s);
+		if(ptr!=table.end())
+		  return 1;
+		else 
+		  return 0;
+    }
+    else
+		return 0;
 }
 void SymbolTable::display(){
     std::map<std::string,Ast*>::iterator iter = table.begin();
@@ -32,6 +35,7 @@ void SymbolTable::display(){
     }
 }
 Ast* SymbolTable::retrieveValue(std::string& s){
+	
 	return table[s];
 }
 void SymbolTable::erase(std::string& s){
