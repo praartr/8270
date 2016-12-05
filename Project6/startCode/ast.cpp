@@ -6,6 +6,7 @@
 #  include "tablemanager.h"
 #  include <math.h>
 #  include <cstring>
+#  include <string>
 Ast* eval(Ast *a) {
   Ast* left = NULL;  
   Ast* right = NULL; 
@@ -32,12 +33,12 @@ Variable::Variable(const char nodetype, const char* variable_name)
 std::string& Variable::getVariable(){
 	return identifier;
 }
-/*GlobalNode::GlobalNode(const char* variable_name) 
+GlobalNode::GlobalNode(const char* variable_name) 
     : Ast('G',NULL,NULL), identifier(variable_name) {}
 
 std::string& GlobalNode::getVariable(){
 	return identifier;
-}*/
+}
 IntNumber::IntNumber(const char nodetype, const int n) 
     : AstNumber(nodetype), number(n) {}
 
@@ -218,7 +219,6 @@ Ast* ReturnNode::getOutput(const Ast* x, const Ast* y) const {
 CallNode::CallNode() : Ast('C',NULL,NULL){
 }
 void CallNode::eval(Ast* node){
-	//std::cout << "inside callnode execute " << std::endl;
 	TableManager tm = TableManager::getInstance();
 	Ast* funcnode = tm.getEntry(node->getVariable());
 	funcnode->execute();
@@ -230,7 +230,6 @@ FuncNode::FuncNode(const std::string& name,Ast* stmt):  Ast('F',NULL,NULL),func_
 }
 
 void FuncNode::execute() { 
-	//std::cout << "inside funcnode execute " << std::endl;
 	suite->execute();	
 }
 SuiteNode::SuiteNode(int currentScope, std::vector<Ast*>::reverse_iterator first, std::vector<Ast*>::reverse_iterator end) : Ast('S',NULL,NULL), FuncScope(currentScope), stmts() {
@@ -243,10 +242,9 @@ SuiteNode::SuiteNode(int currentScope, std::vector<Ast*>::reverse_iterator first
 	
 }
 void SuiteNode::execute() { 
-	
-	//std::cout << "inside suitenode execute " << std::endl;
 	TableManager tm = TableManager::getInstance();
 	tm.pushScope();
+	std::string flag("NULL");
 	std::vector<Ast*>::iterator ptr = stmts.begin();
 	while(ptr != stmts.end()){
 		
@@ -260,24 +258,28 @@ void SuiteNode::execute() {
 		 if((*ptr)->getOutput(NULL,NULL)->getNodetype() == 'I' || (*ptr)->getOutput(NULL,NULL)->getNodetype() == 'F'){
 		    std::cout << "pyt> " << (*ptr)->getOutput(NULL,NULL)->getNumber() << std::endl;
 		 }
-	 }
-	  if( (*ptr)->getNodetype() == '+' || (*ptr)->getNodetype() == '-' || (*ptr)->getNodetype() == '*' || (*ptr)->getNodetype() == '/'
-	                                   || (*ptr)->getNodetype() == '|'|| (*ptr)->getNodetype() == '%'|| (*ptr)->getNodetype() == '^' ){
-		 tm.addTable((*ptr)->getLeft()->getVariable(),(*ptr)->getOutput(tm.getEntry((*ptr)->getLeft()->getVariable()), (*ptr)->getRight()));
-      }
-     /* if( (*ptr)->getNodetype() == 'G'){
-		   
-            Ast* value = tm.getEntry((*ptr)->getOutput(NULL,NULL)->getVariable());
-            int oldScope = tm.getCurrentScope();
-            tm.setScope(0);
-            tm.addTable((*ptr)->getOutput(NULL,NULL)->getVariable(), value);
-            tm.setScope(oldScope);
-            tm.erase((*ptr)->getOutput(NULL,NULL)->getVariable());
-           
-           
-	  }*/
-	 ++ptr;
 	}
+	if( (*ptr)->getNodetype() == '+' || (*ptr)->getNodetype() == '-' || (*ptr)->getNodetype() == '*' || (*ptr)->getNodetype() == '/'
+	                                   || (*ptr)->getNodetype() == '|'|| (*ptr)->getNodetype() == '%'|| (*ptr)->getNodetype() == '^' ){
+		if( flag == (*ptr)->getLeft()->getVariable() ){
+		    tm.popScope();
+		    tm.addTable((*ptr)->getLeft()->getVariable(),(*ptr)->getOutput(tm.getEntry((*ptr)->getLeft()->getVariable()), (*ptr)->getRight()));
+		    tm.pushScope();
+	    }
+	    else
+	         tm.addTable((*ptr)->getLeft()->getVariable(),(*ptr)->getOutput(tm.getEntry((*ptr)->getLeft()->getVariable()), (*ptr)->getRight()));
+    }    
+   if( (*ptr)->getNodetype() == 'G'){
+			 flag = (*ptr)->getVariable();
+            Ast* value = tm.getEntry((*ptr)->getVariable());
+            tm.popScope();
+            tm.addTable((*ptr)->getVariable(), value);
+            tm.pushScope();
+            tm.erase((*ptr)->getVariable());
+	    }
+	    ++ptr;
+	}
+	
 tm.popScope();	
 }
 VoidNode::VoidNode(int i) : Ast('V',NULL,NULL){}

@@ -10,7 +10,10 @@ Project due date: Dec 5, 2016
 
 Project description: Final Project : Python Functions & Scope
 
-Extra Contribution : Implemented (i)Basic Scope and (ii) Return Statement
+Extra Contribution : Implemented (i) Basic Scope 
+                                (ii) Return Statement 
+                                (iii) Global Statement 
+Test Cases for all these three cases are included along with Project 5 test cases.
 
 Note: For floating point results, the precision is set to 3. ( 3 digits after the decimal point ) 
 

@@ -11,7 +11,7 @@ public:
    int isPresent(std::string&);
    void display();
    Ast* retrieveValue(std::string&);
-   //void erase(std::string& s);
+   void erase(std::string& s);
    
 private:
    std::map<std::string,Ast*> table; 	

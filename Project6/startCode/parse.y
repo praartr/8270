@@ -434,7 +434,7 @@ dotted_name // Used in: decorator, import_from, dotted_as_name, dotted_name
 	;
 global_stmt // Used in: small_stmt, global_stmt
 	: global_stmt COMMA NAME
-	| GLOBAL NAME { $$ = 0; }
+	| GLOBAL NAME { $$ = new GlobalNode($2); }
 	;
 exec_stmt // Used in: small_stmt
 	: EXEC expr IN test opt_COMMA_test { $$ = $2; }
