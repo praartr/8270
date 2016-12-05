@@ -296,13 +296,15 @@ expr_stmt // Used in: small_stmt
 			    $$ = new DoubleSlashExp($1,$3);
 	        }
     }
-	| testlist star_EQUAL {     
+	| testlist star_EQUAL {  
+        if($1->getNodetype() != 'C'){	
 	    if(tm.getCurrentScope() > 0){
 	        Ast* a = new AssignNode($1,$2);
 	        $$ = a;
 	    }
 	    else
 	        tm.addTable($1->getVariable(),$2);
+			}
 	}
 	;
 pick_yield_expr_testlist // Used in: expr_stmt, star_EQUAL
@@ -344,7 +346,7 @@ print_stmt // Used in: small_stmt
 	| PRINT RIGHTSHIFT test opt_test_2 { $$ = $3; } 
 	;
 opt_test // Used in: print_stmt
-	: test star_COMMA_test  { $$ = $1; }
+	: test star_COMMA_test  { $$ = $1;   }
 	| %empty     { $$ = 0; }     
 	;
 opt_test_2 // Used in: print_stmt
@@ -564,7 +566,7 @@ and_test // Used in: or_test, and_test
 	;
 not_test // Used in: and_test, not_test
 	: NOT not_test { $$ = $2; }
-	| comparison  
+	| comparison  { $$ = $1;}
 	; 
 comparison // Used in: not_test, comparison
 	: expr  { $$ = $1; }
@@ -605,7 +607,7 @@ pick_LEFTSHIFT_RIGHTSHIFT // Used in: shift_expr
 	| RIGHTSHIFT
 	;
 arith_expr // Used in: shift_expr, arith_expr
-	: term  {  $$ = $1; }
+	: term  {  $$ = $1;}
     | arith_expr PLUS term  { 
 	    if($1->getNodetype() == 'V'){
 		    $1 = TableManager::getInstance().getEntry($1->getVariable());
@@ -699,7 +701,7 @@ factor // Used in: term, factor, power
 	    $$ = uminus->getOutput($2,NULL);
 	}
     | TILDE factor { $$ = $2; }
-	| power { $$ = $1; }
+	| power { $$ = $1; } 
 	;
 power // Used in: factor
 	: atom star_trailer DOUBLESTAR factor    { 
@@ -714,10 +716,9 @@ power // Used in: factor
 	}
 	| atom star_trailer {   
 	    if($2) {
-		    $$ = new CallNode();
+			$$ = new CallNode();
 		    $$->eval($1);
-		    $$=$1;
-		}
+		    }
 		else
             $$ = $1;
 	} 
@@ -764,7 +765,7 @@ listmaker // Used in: opt_listmaker
 	| test star_COMMA_test { $$ = $1; }
 	;
 testlist_comp // Used in: pick_yield_expr_testlist_comp
-	: test comp_for { $$ = $1; }
+	: test comp_for { $$ = $1;  }
 	| test star_COMMA_test { $$ = $1; }
 	;
 lambdef // Used in: test
@@ -781,11 +782,11 @@ subscriptlist // Used in: trailer
 	;
 subscript // Used in: subscriptlist, star_COMMA_subscript
 	: DOT DOT DOT
-	| test
+	| test 
 	| opt_test_only COLON opt_test_only opt_sliceop
 	;
 opt_test_only // Used in: subscript
-	: test
+	: test 
 	| %empty
 	;
 opt_sliceop // Used in: subscript
@@ -801,7 +802,7 @@ exprlist // Used in: del_stmt, for_stmt, list_for, comp_for
 	;
 testlist // Used in: expr_stmt, pick_yield_expr_testlist, 
          // return_stmt, for_stmt, opt_testlist, yield_expr
-	: test star_COMMA_test { $$ = $1; }
+	: test star_COMMA_test { $$ = $1;  }
 	;
 dictorsetmaker // Used in: opt_dictorsetmaker
 	: test COLON test pick_comp_for {$$ = $1;}

@@ -22,17 +22,21 @@ int SymbolTable::isPresent(std::string& s){
 		return 0;
 }
 void SymbolTable::display(){
-    std::map<std::string,Ast*>::iterator iter = table.begin();
-    while(iter != table.end()) {
-        std::cout << iter->first << ",";
-        if(iter->second->getNodetype() == 'M')
-            std::cout << -(iter->second->getLeft()->getNumber()) << std::endl;
-        else if(iter->second->getNodetype() == 'F')
-            std::cout << "function node " << std::endl;
-        else
-            std::cout << iter->second->getNumber() << std::endl;
-        ++iter;
-    }
+	if(!table.empty()){
+		std::map<std::string,Ast*>::iterator iter = table.begin();
+		while(iter != table.end() ) {
+			
+			std::cout << iter->first << ",";
+			if(iter->second->getNodetype() == 'M')
+				std::cout << -(iter->second->getLeft()->getNumber()) << std::endl;
+			else if(iter->second->getNodetype() == 'F')
+				std::cout << "function node " << std::endl;
+			else
+				std::cout << iter->second->getNumber() << std::endl;
+			++iter;
+		}
+	}
+	
 }
 Ast* SymbolTable::retrieveValue(std::string& s){
 	

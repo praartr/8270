@@ -245,41 +245,51 @@ void SuiteNode::execute() {
 	TableManager tm = TableManager::getInstance();
 	tm.pushScope();
 	std::string flag("NULL");
+	int stmt_count = 0;
 	std::vector<Ast*>::iterator ptr = stmts.begin();
 	while(ptr != stmts.end()){
 		
      if( (*ptr)->getNodetype() == '='){
-	     tm.addTable((*ptr)->getLeft()->getVariable(), (*ptr)->getRight());
+		stmt_count++;
+	    tm.addTable((*ptr)->getLeft()->getVariable(), (*ptr)->getRight());
 	 }
 	 if( (*ptr)->getNodetype() == 'P' || (*ptr)->getNodetype() == 'R' ){
 	     if((*ptr)->getOutput(NULL,NULL)->getNodetype() == 'V'){
+			stmt_count++;
 		    std::cout << "pyt> " << tm.getEntry((*ptr)->getOutput(NULL,NULL)->getVariable())->getNumber() << std::endl;
 		 }
 		 if((*ptr)->getOutput(NULL,NULL)->getNodetype() == 'I' || (*ptr)->getOutput(NULL,NULL)->getNodetype() == 'F'){
+			stmt_count++;
 		    std::cout << "pyt> " << (*ptr)->getOutput(NULL,NULL)->getNumber() << std::endl;
 		 }
 	}
 	if( (*ptr)->getNodetype() == '+' || (*ptr)->getNodetype() == '-' || (*ptr)->getNodetype() == '*' || (*ptr)->getNodetype() == '/'
 	                                   || (*ptr)->getNodetype() == '|'|| (*ptr)->getNodetype() == '%'|| (*ptr)->getNodetype() == '^' ){
+		 stmt_count++;
 		if( flag == (*ptr)->getLeft()->getVariable() ){
+			
 		    tm.popScope();
 		    tm.addTable((*ptr)->getLeft()->getVariable(),(*ptr)->getOutput(tm.getEntry((*ptr)->getLeft()->getVariable()), (*ptr)->getRight()));
 		    tm.pushScope();
 	    }
 	    else
-	         tm.addTable((*ptr)->getLeft()->getVariable(),(*ptr)->getOutput(tm.getEntry((*ptr)->getLeft()->getVariable()), (*ptr)->getRight()));
+	        tm.addTable((*ptr)->getLeft()->getVariable(),(*ptr)->getOutput(tm.getEntry((*ptr)->getLeft()->getVariable()), (*ptr)->getRight()));
     }    
    if( (*ptr)->getNodetype() == 'G'){
-			 flag = (*ptr)->getVariable();
-            Ast* value = tm.getEntry((*ptr)->getVariable());
+	    stmt_count++;
+		flag = (*ptr)->getVariable();
+	    if(stmt_count > 1){
+			Ast* value = tm.getEntry((*ptr)->getVariable());
             tm.popScope();
             tm.addTable((*ptr)->getVariable(), value);
             tm.pushScope();
             tm.erase((*ptr)->getVariable());
-	    }
+		}
+			 
+	}
 	    ++ptr;
 	}
-	
+
 tm.popScope();	
 }
 VoidNode::VoidNode(int i) : Ast('V',NULL,NULL){}
