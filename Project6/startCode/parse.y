@@ -72,7 +72,7 @@ single_input // Used in: start
 	| stmt 
 	;
 file_input // Used in: start
-	: star_NEWLINE_stmt ENDMARKER 
+	: star_NEWLINE_stmt ENDMARKER {}
 	;
 pick_NEWLINE_stmt // Used in: star_NEWLINE_stmt
 	: NEWLINE { $$ = 0;  }
@@ -341,7 +341,6 @@ print_stmt // Used in: small_stmt
 		}
 		else 
 		    $$ = new PrintNode($2);
-	    //treeFree($2);
 	}
 	| PRINT RIGHTSHIFT test opt_test_2 { $$ = $3; } 
 	;
@@ -610,10 +609,10 @@ arith_expr // Used in: shift_expr, arith_expr
 	: term  {  $$ = $1;}
     | arith_expr PLUS term  { 
 	    if($1->getNodetype() == 'V'){
-		    $1 = TableManager::getInstance().getEntry($1->getVariable());
+		    $1 = tm.getEntry($1->getVariable());
 	    }  
 	    if($3->getNodetype() == 'V'){
-		    $3 = TableManager::getInstance().getEntry($3->getVariable());
+		    $3 = tm.getEntry($3->getVariable());
 	    } 
 	    Ast* plus = new PlusExp($1,$3);
 	    $$ = plus->getOutput($1,$3);
@@ -621,10 +620,10 @@ arith_expr // Used in: shift_expr, arith_expr
     | arith_expr MINUS term { 
 		
 	    if($1->getNodetype() == 'V'){
-		   $1 = TableManager::getInstance().getEntry($1->getVariable());
+		   $1 = tm.getEntry($1->getVariable());
 	    } 
 	    if($3->getNodetype() == 'V'){
-		   $3 = TableManager::getInstance().getEntry($3->getVariable());
+		   $3 = tm.getEntry($3->getVariable());
 	    } 
 	    Ast* minus = new MinusExp($1,$3);
 	    $$ = minus->getOutput($1,$3);
@@ -634,20 +633,20 @@ term // Used in: arith_expr, term
 	: factor { $$ = $1; }
 	| term STAR factor  {  
 	    if($1->getNodetype() == 'V'){
-	      $1 = TableManager::getInstance().getEntry($1->getVariable());
+	      $1 = tm.getEntry($1->getVariable());
 	    } 
 	    if($3->getNodetype() == 'V'){
-	      $3 = TableManager::getInstance().getEntry($3->getVariable());
+	      $3 = tm.getEntry($3->getVariable());
         }
 	    Ast* mult = new MultExp($1,$3);
 	    $$ = mult->getOutput($1,$3);
 	}
     | term SLASH factor {
 	    if($1->getNodetype() == 'V'){
-		   $1 = TableManager::getInstance().getEntry($1->getVariable());
+		   $1 = tm.getEntry($1->getVariable());
 	    }  
 	    if($3->getNodetype() == 'V'){
-		    $3 = TableManager::getInstance().getEntry($3->getVariable());
+		    $3 = tm.getEntry($3->getVariable());
 	    }
 	    if($3->getNumber() == 0){
 		    std::cout << "DivisionByZeroError" << std::endl;
@@ -660,10 +659,10 @@ term // Used in: arith_expr, term
 	} 
     | term PERCENT factor {
 	    if($1->getNodetype() == 'V'){
-		    $1 = TableManager::getInstance().getEntry($1->getVariable());
+		    $1 = tm.getEntry($1->getVariable());
 	    } 
 	    if($3->getNodetype() == 'V'){
-		    $3 = TableManager::getInstance().getEntry($3->getVariable());
+		    $3 = tm.getEntry($3->getVariable());
 	    }
 	    if($3->getNumber() == 0){
 		    std::cout << "DivisionByZeroError" << std::endl;
@@ -676,10 +675,10 @@ term // Used in: arith_expr, term
 	}
     | term DOUBLESLASH factor{     
 	    if($1->getNodetype() == 'V'){
-		    $1 = TableManager::getInstance().getEntry($1->getVariable());
+		    $1 = tm.getEntry($1->getVariable());
 	    } 
 	    if($3->getNodetype() == 'V'){
-		    $3 = TableManager::getInstance().getEntry($3->getVariable());
+		    $3 = tm.getEntry($3->getVariable());
         }
 	    if($3->getNumber() == 0){
 		    std::cout << "DivisionByZeroError" << std::endl;
@@ -695,7 +694,7 @@ factor // Used in: term, factor, power
 	: PLUS  factor { $$ = $2; }
     | MINUS factor {
 	    if($2->getNodetype() == 'V'){
-	      $2 = TableManager::getInstance().getEntry($2->getVariable());
+	      $2 = tm.getEntry($2->getVariable());
 	    } 
 	    Ast* uminus = new UMinusExp($2);
 	    $$ = uminus->getOutput($2,NULL);
@@ -706,10 +705,10 @@ factor // Used in: term, factor, power
 power // Used in: factor
 	: atom star_trailer DOUBLESTAR factor    { 
 	    if($1->getNodetype() == 'V'){
-	        $1 = TableManager::getInstance().getEntry($1->getVariable());
+	        $1 = tm.getEntry($1->getVariable());
 	    } 
 	    if($4->getNodetype() == 'V'){
-	        $4 = TableManager::getInstance().getEntry($4->getVariable());
+	        $4 = tm.getEntry($4->getVariable());
 	    }
 	    Ast* expo = new ExpoExp($1,$4);
 	    $$ = expo->getOutput($1,$4);     
@@ -718,7 +717,7 @@ power // Used in: factor
 	    if($2) {
 			$$ = new CallNode();
 		    $$->eval($1);
-		    }
+		}
 		else
             $$ = $1;
 	} 

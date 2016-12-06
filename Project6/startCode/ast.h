@@ -16,12 +16,12 @@ extern void yyerror(const char*, const char);
 class Ast {
 public:
   Ast(const int n, Ast* l,Ast* r) : nodetype(n),left(l),right(r) {}
-  virtual ~Ast() { delete left; delete right;}
+  virtual ~Ast() { if(left)delete left; if(right)delete right;}
   char getNodetype() const { return nodetype; }
   Ast* getLeft() const { return left; }
   Ast* getRight() const { return right; }
   virtual double getNumber() const { throw "No Number"; }
-  virtual Ast* getOutput(const Ast* x, const Ast* y) const { throw "NO Output";}
+  virtual Ast* getOutput(const Ast* x, const Ast* y) const { throw "No Output";}
   virtual std::string& getVariable(){ throw "no variable";}  
   virtual void eval(Ast*){ throw "no eval func"; }
   virtual void execute(){ throw "no exec"; }

@@ -33,12 +33,6 @@ Variable::Variable(const char nodetype, const char* variable_name)
 std::string& Variable::getVariable(){
 	return identifier;
 }
-GlobalNode::GlobalNode(const char* variable_name) 
-    : Ast('G',NULL,NULL), identifier(variable_name) {}
-
-std::string& GlobalNode::getVariable(){
-	return identifier;
-}
 IntNumber::IntNumber(const char nodetype, const int n) 
     : AstNumber(nodetype), number(n) {}
 
@@ -189,6 +183,7 @@ void treeFree(Ast *a) {
 
    // one subtrees
   case 'M':
+  case 'P':
     treeFree(a->getLeft());
 
    //no subtree
@@ -196,6 +191,9 @@ void treeFree(Ast *a) {
   case 'S':
   case 'I':
   case 'F':
+  case 'R':
+  case 'C':
+  case 'G':
     delete a;
     break;
 
@@ -219,11 +217,16 @@ Ast* ReturnNode::getOutput(const Ast* x, const Ast* y) const {
 CallNode::CallNode() : Ast('C',NULL,NULL){
 }
 void CallNode::eval(Ast* node){
-	TableManager tm = TableManager::getInstance();
+	TableManager& tm = TableManager::getInstance();
 	Ast* funcnode = tm.getEntry(node->getVariable());
 	funcnode->execute();
 }
+GlobalNode::GlobalNode(const char* variable_name) 
+    : Ast('G',NULL,NULL), identifier(variable_name) {}
 
+std::string& GlobalNode::getVariable(){
+	return identifier;
+}
 
 FuncNode::FuncNode(const std::string& name,Ast* stmt):  Ast('F',NULL,NULL),func_name(name), suite(stmt){
 	
@@ -242,7 +245,7 @@ SuiteNode::SuiteNode(int currentScope, std::vector<Ast*>::reverse_iterator first
 	
 }
 void SuiteNode::execute() { 
-	TableManager tm = TableManager::getInstance();
+	TableManager& tm = TableManager::getInstance();
 	tm.pushScope();
 	std::string flag("NULL");
 	int stmt_count = 0;
@@ -254,18 +257,18 @@ void SuiteNode::execute() {
 	    tm.addTable((*ptr)->getLeft()->getVariable(), (*ptr)->getRight());
 	 }
 	 if( (*ptr)->getNodetype() == 'P' || (*ptr)->getNodetype() == 'R' ){
-	     if((*ptr)->getOutput(NULL,NULL)->getNodetype() == 'V'){
-			stmt_count++;
+		stmt_count++;
+	    if((*ptr)->getOutput(NULL,NULL)->getNodetype() == 'V'){
+			
 		    std::cout << "pyt> " << tm.getEntry((*ptr)->getOutput(NULL,NULL)->getVariable())->getNumber() << std::endl;
-		 }
-		 if((*ptr)->getOutput(NULL,NULL)->getNodetype() == 'I' || (*ptr)->getOutput(NULL,NULL)->getNodetype() == 'F'){
-			stmt_count++;
+		}
+		if((*ptr)->getOutput(NULL,NULL)->getNodetype() == 'I' || (*ptr)->getOutput(NULL,NULL)->getNodetype() == 'F'){
 		    std::cout << "pyt> " << (*ptr)->getOutput(NULL,NULL)->getNumber() << std::endl;
-		 }
+		}
 	}
 	if( (*ptr)->getNodetype() == '+' || (*ptr)->getNodetype() == '-' || (*ptr)->getNodetype() == '*' || (*ptr)->getNodetype() == '/'
 	                                   || (*ptr)->getNodetype() == '|'|| (*ptr)->getNodetype() == '%'|| (*ptr)->getNodetype() == '^' ){
-		 stmt_count++;
+		stmt_count++;
 		if( flag == (*ptr)->getLeft()->getVariable() ){
 			
 		    tm.popScope();
