@@ -8,4 +8,3 @@ def f():
    return x
 f()
 print x
-
